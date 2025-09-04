@@ -256,7 +256,7 @@ export const hotelConsumptionItemsApiService = {
     console.log('🏨 [hotelConsumptionItemsApiService.getAll] Buscando itens de consumo via API');
     
     const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/hotel-consumption-items`, {
+    const response = await fetch(`${API_BASE_URL}/hotel-consumption/items`, {
       headers
     });
     
@@ -266,3 +266,34 @@ export const hotelConsumptionItemsApiService = {
     return result.data || [];
   }
 };
+
+// Hotel Dashboard API Service
+export const hotelDashboardApiService = {
+  async getDashboardData(professionalId: string, period: number = 30): Promise<any> {
+    console.log('🏨 [hotelDashboardApiService.getDashboardData] Buscando dados do dashboard via API', { professionalId, period });
+    
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/hotel-dashboard?professional_id=${professionalId}&period=${period}`, {
+      headers
+    });
+    
+    const result = await handleResponse(response);
+    console.log('🏨 [hotelDashboardApiService.getDashboardData] Dados do dashboard recebidos via API:', result);
+    
+    return result.data;
+  },
+
+  async getQuickStats(professionalId: string): Promise<any> {
+    console.log('🏨 [hotelDashboardApiService.getQuickStats] Buscando estatísticas rápidas via API', { professionalId });
+    
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/hotel-dashboard/quick?professional_id=${professionalId}`, {
+      headers
+    });
+    
+    const result = await handleResponse(response);
+    console.log('🏨 [hotelDashboardApiService.getQuickStats] Estatísticas rápidas recebidas via API:', result);
+    
+    return result.data;
+   }
+ };

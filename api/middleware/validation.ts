@@ -103,3 +103,20 @@ export const paginationSchema = z.object({
   page: z.string().transform(val => parseInt(val) || 1),
   limit: z.string().transform(val => Math.min(parseInt(val) || 10, 100))
 });
+
+// Middleware para validar professional_id
+export const validateProfessionalId = (req: Request, res: Response, next: NextFunction) => {
+  const professionalId = req.query.professional_id || req.body.professional_id;
+  
+  if (!professionalId) {
+    return res.status(400).json({ error: 'professional_id é obrigatório' });
+  }
+  
+  // Validar se é um UUID válido
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(professionalId as string)) {
+    return res.status(400).json({ error: 'professional_id deve ser um UUID válido' });
+  }
+  
+  next();
+};

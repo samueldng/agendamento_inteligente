@@ -5,10 +5,11 @@ import {
   hotelRoomsApiService,
   hotelReservationsApiService,
   hotelCheckinsApiService,
-  hotelConsumptionApiService
+  hotelConsumptionApiService,
+  hotelConsumptionItemsApiService,
+  hotelDashboardApiService
 } from '../services/hotelApiService';
 import {
-  hotelConsumptionItemsService,
   hotelDashboardService
 } from '../services/hotelService';
 import type { Database } from '../lib/supabase';
@@ -468,12 +469,10 @@ export function useHotelConsumptionItems() {
   const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchItems = async () => {
-    if (!professionalId) return;
-    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelConsumptionItemsService.getAll(professionalId);
+      const data = await hotelConsumptionItemsApiService.getAll();
       setItems(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar itens de consumo';
@@ -485,10 +484,8 @@ export function useHotelConsumptionItems() {
   };
 
   useEffect(() => {
-    if (professionalId) {
-      fetchItems();
-    }
-  }, [professionalId]);
+    fetchItems();
+  }, []);
 
   return {
     items,
@@ -521,8 +518,17 @@ export function useHotelDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelDashboardService.getDashboardData(professionalId);
-      setStats(data);
+      const data = await hotelDashboardApiService.getQuickStats(professionalId);
+      setStats({
+        totalRooms: data.total_rooms || 0,
+        occupiedRooms: data.occupied_rooms || 0,
+        availableRooms: data.available_rooms || 0,
+        maintenanceRooms: data.maintenance_rooms || 0,
+        todayCheckins: data.today_checkins || 0,
+        todayCheckouts: data.today_checkouts || 0,
+        totalRevenue: data.today_revenue || 0,
+        occupancyRate: data.occupancy_rate || 0,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar estatísticas';
       setError(message);
@@ -566,20 +572,16 @@ export function useHotelDashboard() {
       const startDate = new Date();
       startDate.setDate(endDate.getDate() - days);
       
-      const data = await hotelDashboardService.getDashboardData(
-        currentProfessionalId,
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
-      );
+      const data = await hotelDashboardApiService.getDashboardData(currentProfessionalId, days);
       
       // Mapear dados para o formato esperado pelo Dashboard
       const mappedData = {
-        totalRooms: data.available_rooms + (data.active_guests > 0 ? Math.ceil(data.active_guests / 2) : 0),
-        availableRooms: data.available_rooms,
-        occupiedRooms: data.active_guests > 0 ? Math.ceil(data.active_guests / 2) : 0,
-        checkedInGuests: data.active_guests,
-        occupancyRate: data.occupancy_rate,
-        monthlyRevenue: data.period_revenue,
+        totalRooms: data.total_rooms || 0,
+        availableRooms: data.available_rooms || 0,
+        occupiedRooms: data.occupied_rooms || 0,
+        checkedInGuests: data.checked_in_guests || 0,
+        occupancyRate: data.occupancy_rate || 0,
+        monthlyRevenue: data.total_revenue || 0,
         recentReservations: data.recent_reservations || [],
         recentCheckins: data.recent_checkins || [],
         recentConsumption: data.recent_consumption || []

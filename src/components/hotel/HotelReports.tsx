@@ -51,133 +51,45 @@ const HotelReports: React.FC = () => {
         return;
       }
 
+      // Obter dados do usuário
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.user_metadata?.professionalId) {
+        toast.error('Professional ID não encontrado');
+        return;
+      }
+
       const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+      const professionalId = user.user_metadata.professionalId;
 
-      // Buscar dados de reservas
-      const reservationsResponse = await fetch(`${API_BASE_URL}/hotel-reservations`, {
+      // Buscar relatórios da nova API
+      const reportsResponse = await fetch(`${API_BASE_URL}/hotel-reports?professional_id=${professionalId}&start_date=${dateRange.startDate}&end_date=${dateRange.endDate}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
 
-      if (!reservationsResponse.ok) {
-        throw new Error('Erro ao buscar reservas');
+      if (!reportsResponse.ok) {
+        throw new Error('Erro ao buscar relatórios');
       }
 
-      const reservationsData = await reservationsResponse.json();
-      const reservations = reservationsData.data || [];
+      const reports = await reportsResponse.json();
 
-      // Buscar dados de quartos
-      const roomsResponse = await fetch(`${API_BASE_URL}/hotel-rooms`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!roomsResponse.ok) {
-        throw new Error('Erro ao buscar quartos');
-      }
-
-      const roomsData = await roomsResponse.json();
-      const rooms = roomsData.data || [];
-
-      // Buscar dados de consumo
-      const consumptionResponse = await fetch(`${API_BASE_URL}/hotel-consumption`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      let consumptions = [];
-      if (consumptionResponse.ok) {
-        const consumptionData = await consumptionResponse.json();
-        consumptions = consumptionData.data || [];
-      }
-
-      // Filtrar reservas por período
-      const startDate = new Date(dateRange.startDate);
-      const endDate = new Date(dateRange.endDate);
-      
-      const filteredReservations = reservations.filter((reservation: any) => {
-        const checkInDate = new Date(reservation.check_in_date);
-        return checkInDate >= startDate && checkInDate <= endDate;
-      });
-
-      const filteredConsumptions = consumptions.filter((consumption: any) => {
-        const consumptionDate = new Date(consumption.created_at);
-        return consumptionDate >= startDate && consumptionDate <= endDate;
-      });
-
-      // Calcular métricas
-      const totalRevenue = filteredReservations.reduce((sum: number, res: any) => sum + (res.total_amount || 0), 0);
-      const totalConsumption = filteredConsumptions.reduce((sum: number, cons: any) => sum + (cons.total_amount || 0), 0);
-      const totalGuests = filteredReservations.reduce((sum: number, res: any) => sum + (res.num_guests || 0), 0);
-      const averageDailyRate = filteredReservations.length > 0 ? totalRevenue / filteredReservations.length : 0;
-
-      // Calcular taxa de ocupação
-      const totalRooms = rooms.length;
-      const occupiedDays = filteredReservations.reduce((sum: number, res: any) => {
-        const checkIn = new Date(res.check_in_date);
-        const checkOut = new Date(res.check_out_date);
-        const days = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-        return sum + days;
-      }, 0);
-      
-      const periodDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-      const occupancyRate = totalRooms > 0 && periodDays > 0 ? (occupiedDays / (totalRooms * periodDays)) * 100 : 0;
-
+      // Usar dados da nova API de relatórios
       setReportData({
-        occupancyRate,
-        totalRevenue,
-        totalConsumption,
-        averageDailyRate,
-        totalGuests,
-        totalReservations: filteredReservations.length
+        totalReservations: reports.summary.totalReservations,
+        totalRevenue: reports.summary.totalRevenue,
+        totalGuests: reports.summary.totalGuests,
+        occupancyRate: reports.summary.occupancyRate,
+        averageDailyRate: reports.summary.averageDailyRate,
+        totalConsumption: reports.summary.consumptionRevenue
       });
 
-      // Gerar dados de ocupação por dia
-      const occupancyByDay: OccupancyData[] = [];
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-        const dateStr = d.toISOString().split('T')[0];
-        const dayReservations = filteredReservations.filter((res: any) => {
-          const checkIn = new Date(res.check_in_date);
-          const checkOut = new Date(res.check_out_date);
-          return d >= checkIn && d < checkOut;
-        });
-        
-        const dayOccupancy = totalRooms > 0 ? (dayReservations.length / totalRooms) * 100 : 0;
-        const dayRevenue = dayReservations.reduce((sum: number, res: any) => {
-          const checkIn = new Date(res.check_in_date);
-          const checkOut = new Date(res.check_out_date);
-          const totalDays = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-          return sum + (res.total_amount || 0) / totalDays;
-        }, 0);
+      // Usar dados de ocupação da API
+      setOccupancyData(reports.occupancyByDay || []);
 
-        occupancyByDay.push({
-          date: dateStr,
-          occupancy: Math.round(dayOccupancy),
-          revenue: Math.round(dayRevenue)
-        });
-      }
-      setOccupancyData(occupancyByDay);
-
-      // Gerar dados de consumo por categoria
-      const consumptionByCategory: { [key: string]: number } = {};
-      filteredConsumptions.forEach((consumption: any) => {
-        const category = consumption.category || 'Outros';
-        consumptionByCategory[category] = (consumptionByCategory[category] || 0) + (consumption.total_amount || 0);
-      });
-
-      const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
-      const consumptionChartData = Object.entries(consumptionByCategory).map(([category, amount], index) => ({
-        category,
-        amount,
-        color: colors[index % colors.length]
-      }));
-      setConsumptionData(consumptionChartData);
+      // Usar dados de consumo da API
+      setConsumptionData(reports.consumptionByCategory || []);
 
     } catch (error) {
       console.error('Erro ao carregar dados do relatório:', error);

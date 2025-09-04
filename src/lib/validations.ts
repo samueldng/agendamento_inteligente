@@ -112,7 +112,7 @@ export const hotelCheckoutSchema = z.object({
 
 // Hotel Pricing schemas
 export const hotelPricingSchema = z.object({
-  room_type: z.enum(['standard', 'deluxe', 'suite', 'presidential'], {
+  room_type: z.enum(['single', 'double', 'suite', 'family'], {
     errorMap: () => ({ message: 'Tipo de quarto inválido' }),
   }),
   base_price: z.number().min(0, 'Preço base não pode ser negativo'),

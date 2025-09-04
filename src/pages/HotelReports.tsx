@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Download, Calendar, DollarSign, Users, Bed, TrendingUp, BarChart3, PieChart } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FileText, Download, Calendar, DollarSign, Users, Bed, TrendingUp, BarChart3, PieChart as PieChartIcon, CalendarDays } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ReportData {
@@ -24,155 +27,90 @@ interface MonthlyReport {
   guests: number;
 }
 
-const HotelReports: React.FC = () => {
+export default function HotelReports() {
   const { user } = useAuth();
+  
   const [reportData, setReportData] = useState<ReportData>({
-    period: 'Mês Atual',
-    occupancyRate: 0,
-    totalRevenue: 0,
     totalReservations: 0,
-    averageDailyRate: 0,
+    totalRevenue: 0,
     totalGuests: 0,
-    roomsOccupied: 0,
+    occupancyRate: 0,
+    averageDailyRate: 0,
     consumptionRevenue: 0
   });
+  
   const [monthlyReports, setMonthlyReports] = useState<MonthlyReport[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState('current-month');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadReportData();
   }, [selectedPeriod]);
 
   const loadReportData = async () => {
+    if (!user?.professionalId) return;
+    
     setLoading(true);
     try {
-      // Carregar dados das reservas
-      const reservationsResponse = await fetch('/api/hotel-reservations');
-      const reservationsData = await reservationsResponse.json();
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token;
       
-      // Carregar dados dos quartos
-      const roomsResponse = await fetch('/api/hotel-rooms');
-      const roomsData = await roomsResponse.json();
-      
-      // Carregar dados de consumo
-      const consumptionResponse = await fetch('/api/hotel-consumption');
-      const consumptionData = await consumptionResponse.json();
-      
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-      
-      // Filtrar dados baseado no período selecionado
-      let filteredReservations = reservationsData;
-      let periodLabel = 'Mês Atual';
-      
-      if (selectedPeriod === 'current-month') {
-        filteredReservations = reservationsData.filter((reservation: any) => {
-          const checkIn = new Date(reservation.checkInDate);
-          return checkIn.getMonth() === currentMonth && checkIn.getFullYear() === currentYear;
-        });
-        periodLabel = 'Mês Atual';
-      } else if (selectedPeriod === 'last-month') {
-        const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-        filteredReservations = reservationsData.filter((reservation: any) => {
-          const checkIn = new Date(reservation.checkInDate);
-          return checkIn.getMonth() === lastMonth && checkIn.getFullYear() === lastMonthYear;
-        });
-        periodLabel = 'Mês Anterior';
-      } else if (selectedPeriod === 'current-year') {
-        filteredReservations = reservationsData.filter((reservation: any) => {
-          const checkIn = new Date(reservation.checkInDate);
-          return checkIn.getFullYear() === currentYear;
-        });
-        periodLabel = 'Ano Atual';
+      if (!token) {
+        console.error('Token de acesso não encontrado');
+        return;
       }
+
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
       
-      // Calcular métricas
-      const totalReservations = filteredReservations.length;
-      const confirmedReservations = filteredReservations.filter((r: any) => r.status === 'confirmed');
-      const totalRevenue = confirmedReservations.reduce((sum: number, r: any) => sum + (r.totalAmount || 0), 0);
-      const totalGuests = confirmedReservations.reduce((sum: number, r: any) => sum + (r.guestCount || 1), 0);
+      // Calcular datas baseadas no período selecionado
+      let startDate: Date;
+      let endDate = new Date();
       
-      // Calcular taxa de ocupação
-      const activeRooms = roomsData.filter((room: any) => room.isActive);
-      const daysInPeriod = selectedPeriod === 'current-year' ? 365 : 30;
-      const totalRoomNights = activeRooms.length * daysInPeriod;
-      const occupiedRoomNights = confirmedReservations.reduce((sum: number, r: any) => {
-        const checkIn = new Date(r.checkInDate);
-        const checkOut = new Date(r.checkOutDate);
-        const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-        return sum + nights;
-      }, 0);
+      switch (selectedPeriod) {
+         case 'current_month':
+           startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+           break;
+         case 'last_month':
+           startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+           endDate = new Date(endDate.getFullYear(), endDate.getMonth(), 0);
+           break;
+         case 'current_year':
+           startDate = new Date(endDate.getFullYear(), 0, 1);
+           break;
+         default:
+           startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+       }
       
-      const occupancyRate = totalRoomNights > 0 ? Math.round((occupiedRoomNights / totalRoomNights) * 100) : 0;
-      const averageDailyRate = occupiedRoomNights > 0 ? totalRevenue / occupiedRoomNights : 0;
-      
-      // Calcular receita de consumo
-      const consumptionRevenue = consumptionData
-        .filter((consumption: any) => {
-          const date = new Date(consumption.createdAt || consumption.date);
-          if (selectedPeriod === 'current-month') {
-            return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-          } else if (selectedPeriod === 'last-month') {
-            const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-            const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-            return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear;
-          } else if (selectedPeriod === 'current-year') {
-            return date.getFullYear() === currentYear;
+      // Buscar relatórios da nova API
+      const reportsResponse = await fetch(
+        `${apiUrl}/api/hotel-reports?professional_id=${user.professionalId}&start_date=${startDate.toISOString().split('T')[0]}&end_date=${endDate.toISOString().split('T')[0]}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
-          return false;
-        })
-        .reduce((sum: number, c: any) => sum + (c.totalAmount || 0), 0);
+        }
+      );
       
-      setReportData({
-        period: periodLabel,
-        occupancyRate,
-        totalRevenue,
-        totalReservations,
-        averageDailyRate,
-        totalGuests,
-        roomsOccupied: occupiedRoomNights,
-        consumptionRevenue
-      });
-      
-      // Gerar relatórios mensais para o gráfico
-      const monthlyData: MonthlyReport[] = [];
-      for (let i = 5; i >= 0; i--) {
-        const date = new Date(currentYear, currentMonth - i, 1);
-        const month = date.getMonth();
-        const year = date.getFullYear();
-        
-        const monthReservations = reservationsData.filter((reservation: any) => {
-          const checkIn = new Date(reservation.checkInDate);
-          return checkIn.getMonth() === month && checkIn.getFullYear() === year && reservation.status === 'confirmed';
-        });
-        
-        const monthRevenue = monthReservations.reduce((sum: number, r: any) => sum + (r.totalAmount || 0), 0);
-        const monthGuests = monthReservations.reduce((sum: number, r: any) => sum + (r.guestCount || 1), 0);
-        
-        const monthOccupiedNights = monthReservations.reduce((sum: number, r: any) => {
-          const checkIn = new Date(r.checkInDate);
-          const checkOut = new Date(r.checkOutDate);
-          const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-          return sum + nights;
-        }, 0);
-        
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const monthTotalRoomNights = activeRooms.length * daysInMonth;
-        const monthOccupancyRate = monthTotalRoomNights > 0 ? Math.round((monthOccupiedNights / monthTotalRoomNights) * 100) : 0;
-        
-        monthlyData.push({
-          month: date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
-          occupancyRate: monthOccupancyRate,
-          revenue: monthRevenue,
-          reservations: monthReservations.length,
-          guests: monthGuests
-        });
+      if (!reportsResponse.ok) {
+        throw new Error('Erro ao buscar relatórios');
       }
       
-      setMonthlyReports(monthlyData);
+      const reportsData = await reportsResponse.json();
+      const reports = reportsData.data;
+      
+      // Usar dados da nova API de relatórios
+       setReportData({
+         totalReservations: reports.summary.totalReservations,
+         totalRevenue: reports.summary.totalRevenue,
+         totalGuests: reports.summary.totalGuests,
+         occupancyRate: reports.summary.occupancyRate,
+         averageDailyRate: reports.summary.averageDailyRate,
+         consumptionRevenue: reports.summary.consumptionRevenue
+       });
+
+      // Usar dados mensais da API
+      setMonthlyReports(reports.monthlyReports || []);
     } catch (error) {
       console.error('Erro ao carregar dados dos relatórios:', error);
       // Dados de fallback
@@ -388,6 +326,4 @@ Gerado em: ${new Date().toLocaleString('pt-BR')}
       </Card>
     </div>
   );
-};
-
-export default HotelReports;
+}

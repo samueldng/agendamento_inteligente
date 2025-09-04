@@ -27,7 +27,7 @@ export function useNotifications() {
         return;
       }
       
-      const response = await fetch('/api/hotel/notifications', {
+      const response = await fetch('http://localhost:3002/api/hotel/notifications', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
@@ -75,7 +75,7 @@ export function useNotifications() {
         return;
       }
       
-      const response = await fetch(`/api/hotel/notifications/${notificationId}/read`, {
+      const response = await fetch(`http://localhost:3002/api/hotel/notifications/${notificationId}/read`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -111,7 +111,7 @@ export function useNotifications() {
         return;
       }
 
-      const response = await fetch('/api/hotel/notifications/mark-all-read', {
+      const response = await fetch('http://localhost:3002/api/hotel/notifications/mark-all-read', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,

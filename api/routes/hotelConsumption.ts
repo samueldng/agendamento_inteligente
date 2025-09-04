@@ -6,7 +6,8 @@ import {
   createConsumption,
   updateConsumption,
   deleteConsumption,
-  getConsumptionReport
+  getConsumptionReport,
+  getAllConsumption
 } from '../controllers/hotelConsumption';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.use(authenticateToken);
 router.get('/items', getConsumptionItems);
 
 // Rotas para consumo
+router.get('/', getAllConsumption);
 router.get('/reservation/:reservation_id', getConsumptionByReservation);
 router.post('/', createConsumption);
 router.put('/:id', updateConsumption);

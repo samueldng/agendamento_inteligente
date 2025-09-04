@@ -446,3 +446,67 @@ export const getConsumptionReport = async (req: AuthRequest, res: Response) => {
     } as ApiResponse);
   }
 };
+
+// Obter todos os consumos
+export const getAllConsumption = async (req: AuthRequest, res: Response) => {
+  try {
+    const { professional_id } = req.query;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Usuário não autenticado'
+      } as ApiResponse);
+    }
+
+    let query = supabaseAdmin
+      .from('hotel_consumption')
+      .select(`
+        *,
+        hotel_consumption_items(
+          id,
+          name,
+          category,
+          description,
+          price
+        ),
+        hotel_reservations(
+          id,
+          guest_name,
+          room_id,
+          professional_id,
+          hotel_rooms(
+            room_number
+          )
+        )
+      `)
+      .order('consumed_at', { ascending: false });
+
+    // Filtrar por professional_id se especificado
+    if (professional_id) {
+      query = query.eq('hotel_reservations.professional_id', professional_id);
+    }
+
+    const { data: consumption, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar consumos:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Erro interno do servidor'
+      } as ApiResponse);
+    }
+
+    res.json({
+      success: true,
+      data: consumption || []
+    } as ApiResponse<HotelConsumption[]>);
+  } catch (error) {
+    console.error('Erro ao buscar consumos:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Erro interno do servidor'
+    } as ApiResponse);
+  }
+};

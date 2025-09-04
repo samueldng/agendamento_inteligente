@@ -3,11 +3,11 @@ import { z } from 'zod';
 // Hotel Room validation schema
 export const hotelRoomSchema = z.object({
   room_number: z.string().min(1, 'Número do quarto é obrigatório'),
-  room_type: z.enum(['standard', 'deluxe', 'suite', 'presidential'], {
+  room_type: z.enum(['single', 'double', 'suite', 'family'], {
     errorMap: () => ({ message: 'Tipo de quarto inválido' })
   }),
   capacity: z.number().min(1, 'Capacidade deve ser pelo menos 1').max(10, 'Capacidade máxima é 10'),
-  price_per_night: z.number().min(0, 'Preço deve ser positivo'),
+  base_price: z.number().min(0, 'Preço deve ser positivo'),
   amenities: z.array(z.string()).optional(),
   description: z.string().optional(),
   is_active: z.boolean().default(true)
@@ -94,7 +94,7 @@ export const roomSearchSchema = z.object({
   check_in_date: z.string().min(1, 'Data de check-in é obrigatória'),
   check_out_date: z.string().min(1, 'Data de check-out é obrigatória'),
   num_guests: z.number().min(1, 'Número de hóspedes deve ser pelo menos 1').optional(),
-  room_type: z.enum(['standard', 'deluxe', 'suite', 'presidential']).optional()
+  room_type: z.enum(['single', 'double', 'suite', 'family']).optional()
 }).refine((data) => {
   const checkIn = new Date(data.check_in_date);
   const checkOut = new Date(data.check_out_date);

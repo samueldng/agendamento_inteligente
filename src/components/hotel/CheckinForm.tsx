@@ -41,21 +41,19 @@ export function CheckinForm({ checkin, onSubmit, onCancel, loading = false }: Ch
     resolver: zodResolver(hotelCheckinSchema),
     defaultValues: {
       reservation_id: checkin?.reservation_id || '',
-      checkin_datetime: checkin?.checkin_datetime ? 
-        new Date(checkin.checkin_datetime).toISOString().slice(0, 16) : 
+      checkin_datetime: checkin?.check_in_datetime ? 
+        new Date(checkin.check_in_datetime).toISOString().slice(0, 16) : 
         new Date().toISOString().slice(0, 16),
-      checkout_datetime: checkin?.checkout_datetime ? 
-        new Date(checkin.checkout_datetime).toISOString().slice(0, 16) : '',
+      checkout_datetime: checkin?.check_out_datetime ? 
+        new Date(checkin.check_out_datetime).toISOString().slice(0, 16) : '',
       actual_guests: checkin?.actual_guests || 1,
-      checkin_notes: checkin?.checkin_notes || '',
-      checkout_notes: checkin?.checkout_notes || '',
+      checkin_notes: checkin?.staff_notes || '',
       room_condition_checkin: checkin?.room_condition_checkin || '',
       room_condition_checkout: checkin?.room_condition_checkout || '',
       damages_reported: checkin?.damages_reported || '',
       additional_charges: checkin?.additional_charges || 0,
-      payment_method: checkin?.payment_method || '',
-      staff_checkin: checkin?.staff_checkin || '',
-      staff_checkout: checkin?.staff_checkout || '',
+      payment_method: '',
+      staff_checkin: '',
     },
   });
 
@@ -303,30 +301,32 @@ export function CheckinForm({ checkin, onSubmit, onCancel, loading = false }: Ch
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Observações</Label>
+            <Label htmlFor="checkin_notes">Observações do Check-in</Label>
             <Textarea
-              id="notes"
-              {...register('notes')}
+              id="checkin_notes"
+              {...register('checkin_notes')}
               placeholder="Observações sobre o check-in..."
               rows={3}
-              className={errors.notes ? 'border-red-500' : ''}
+              className={errors.checkin_notes ? 'border-red-500' : ''}
             />
-            {errors.notes && (
-              <p className="text-sm text-red-500">{errors.notes.message}</p>
+            {errors.checkin_notes && (
+              <p className="text-sm text-red-500">{errors.checkin_notes.message}</p>
             )}
           </div>
 
           {/* Summary */}
-          {watchedReservationId && (
+          {watchedReservationId && selectedReservation && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-semibold mb-2">Resumo Financeiro</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <span>Valor da reserva:</span>
-                <span>{formatCurrency(watch('total_amount') || 0)}</span>
+                <span>{formatCurrency(selectedReservation.total_amount || 0)}</span>
                 <span>Consumo adicional:</span>
                 <span>{formatCurrency(consumptionTotal)}</span>
+                <span>Encargos adicionais:</span>
+                <span>{formatCurrency(watchedAdditionalCharges || 0)}</span>
                 <span className="font-semibold text-lg">Total a pagar:</span>
-                <span className="font-semibold text-lg">{formatCurrency(watch('final_amount') || 0)}</span>
+                <span className="font-semibold text-lg">{formatCurrency((selectedReservation.total_amount || 0) + consumptionTotal + (watchedAdditionalCharges || 0))}</span>
               </div>
             </div>
           )}

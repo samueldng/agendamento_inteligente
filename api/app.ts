@@ -16,6 +16,8 @@ import hotelRoomsRoutes from './routes/hotelRooms';
 import hotelReservationsRoutes from './routes/hotelReservations';
 import hotelCheckinsRoutes from './routes/hotelCheckins';
 import hotelConsumptionRoutes from './routes/hotelConsumption';
+import hotelDashboardRoutes from './routes/hotelDashboard';
+import hotelReportsRoutes from './routes/hotelReports';
 import hotelNotificationsRoutes from './hotel/notifications';
 import { initializeNotificationService } from './services/notificationService';
 import notificationService from './services/notificationService';
@@ -43,6 +45,8 @@ app.use('/api/hotel-rooms', hotelRoomsRoutes);
 app.use('/api/hotel-reservations', hotelReservationsRoutes);
 app.use('/api/hotel-checkins', hotelCheckinsRoutes);
 app.use('/api/hotel-consumption', hotelConsumptionRoutes);
+app.use('/api/hotel-dashboard', hotelDashboardRoutes);
+app.use('/api/hotel-reports', hotelReportsRoutes);
 app.use('/api/hotel/notifications', hotelNotificationsRoutes);
 
 // Inicializar serviço de notificações
