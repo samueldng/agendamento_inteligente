@@ -14,7 +14,7 @@
     "check": "tsc --noEmit",
     "server:dev": "nodemon",
     "build:api": "tsc --project tsconfig.build.json",
-    "start:prod": "tsx api/server.ts",
+    "start:prod": "tsx api/render-server.ts",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\""
   },
   "dependencies": {
