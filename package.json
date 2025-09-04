@@ -13,7 +13,8 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "server:dev": "nodemon",
-    "start:prod": "tsx api/server.ts",
+    "build:api": "tsc --project tsconfig.build.json",
+    "start:prod": "node dist/api/server.js",
     "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\""
   },
   "dependencies": {
