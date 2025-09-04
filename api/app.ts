@@ -37,8 +37,6 @@ app.get('/', (req, res) => {
   res.json({ status: 'online', message: 'Bem-vindo à API do Hora Marcada!', version: '0.1.3' });
 });
 
-
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -72,10 +70,7 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
+
 
 /**
  * error handler middleware
