@@ -10,15 +10,46 @@ node_modules/
 
 # Development files
 nodemon.json
+.eslintrc*
+.prettierrc*
+tsconfig.json
+vite.config.ts
+postcss.config.js
+tailwind.config.js
 
 # Documentation
 README.md
+*.md
 
 # Supabase
 supabase/
+
+# Test files
+**/*.test.*
+**/*.spec.*
+__tests__/
+coverage/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Git files
+.git/
+.gitignore
 
 # Logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Cache directories
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+dist/
+build/
