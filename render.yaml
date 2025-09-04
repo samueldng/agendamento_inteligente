@@ -3,7 +3,7 @@ services:
     name: agendamento-backend
     env: node
     plan: free
-    buildCommand: npm install && npm run build:api
+    buildCommand: npm install
     startCommand: npm run start:prod
     envVars:
       - key: NODE_ENV
