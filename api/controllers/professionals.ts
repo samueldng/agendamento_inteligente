@@ -185,6 +185,97 @@ export const getProfessionalById = async (req: Request, res: Response) => {
   }
 };
 
+export const getProfessionalByUserId = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user?.id) {
+      return res.status(401).json({ error: 'Usuário não autenticado' });
+    }
+
+    const user_id = req.user.id;
+
+    // Primeiro, tentar buscar o profissional existente
+    const { data: professional, error } = await supabaseAdmin
+      .from('professionals')
+      .select(`
+        *,
+        business_categories(id, name, description),
+        services(id, name, description, price, duration)
+      `)
+      .eq('user_id', user_id)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !professional) {
+      // Se não encontrar, buscar dados do usuário para criar um profissional
+      const { data: userData, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id, email, name')
+        .eq('id', user_id)
+        .single();
+
+      if (userError || !userData) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      // Buscar uma categoria padrão
+      const { data: defaultCategory } = await supabaseAdmin
+        .from('business_categories')
+        .select('id')
+        .limit(1)
+        .single();
+
+      // Criar um profissional básico
+      const newProfessionalData = {
+        user_id: userData.id,
+        name: userData.name || userData.email?.split('@')[0] || 'Profissional',
+        email: userData.email,
+        phone: '',
+        specialties: ['Atendimento Geral'],
+        working_hours: {
+          monday: { start: '09:00', end: '17:00', available: true },
+          tuesday: { start: '09:00', end: '17:00', available: true },
+          wednesday: { start: '09:00', end: '17:00', available: true },
+          thursday: { start: '09:00', end: '17:00', available: true },
+          friday: { start: '09:00', end: '17:00', available: true },
+          saturday: { start: '09:00', end: '12:00', available: false },
+          sunday: { start: '09:00', end: '12:00', available: false }
+        },
+        is_active: true,
+        category_id: defaultCategory?.id || null,
+        dynamic_fields: {}
+      };
+
+      const { data: newProfessional, error: createError } = await supabaseAdmin
+        .from('professionals')
+        .insert(newProfessionalData)
+        .select(`
+          *,
+          business_categories(id, name, description),
+          services(id, name, description, price, duration)
+        `)
+        .single();
+
+      if (createError) {
+        console.error('Erro ao criar profissional:', createError);
+        return res.status(500).json({ error: 'Erro ao criar profissional' });
+      }
+
+      return res.json({
+        success: true,
+        data: newProfessional
+      });
+    }
+
+    res.json({
+      success: true,
+      data: professional
+    });
+  } catch (error) {
+    console.error('Erro ao buscar profissional por user_id:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+};
+
 export const updateProfessional = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;

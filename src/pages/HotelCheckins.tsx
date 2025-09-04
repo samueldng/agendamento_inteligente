@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HotelCheckinList from '../components/HotelCheckinList';
+import { supabase } from '../lib/supabase';
 
 export default function HotelCheckins() {
   const [professionalId, setProfessionalId] = useState<string | null>(null);
@@ -11,15 +12,15 @@ export default function HotelCheckins() {
   useEffect(() => {
     const loadProfessionalData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
           navigate('/login');
           return;
         }
 
         const response = await fetch('/api/professionals/me', {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${session.access_token}`
           }
         });
 

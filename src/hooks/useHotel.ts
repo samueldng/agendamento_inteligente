@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useProfessional, useAwaitProfessional } from './useProfessional';
 import {
-  hotelRoomsService,
-  hotelReservationsService,
-  hotelCheckinsService,
-  hotelConsumptionService,
+  hotelRoomsApiService,
+  hotelReservationsApiService,
+  hotelCheckinsApiService,
+  hotelConsumptionApiService
+} from '../services/hotelApiService';
+import {
   hotelConsumptionItemsService,
-  hotelDashboardService,
+  hotelDashboardService
 } from '../services/hotelService';
 import type { Database } from '../lib/supabase';
 
@@ -32,12 +35,15 @@ export function useHotelRooms() {
   const [rooms, setRooms] = useState<HotelRoom[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchRooms = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelRoomsService.getAll();
+      const data = await hotelRoomsApiService.getAll(professionalId);
       setRooms(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar quartos';
@@ -48,10 +54,24 @@ export function useHotelRooms() {
     }
   };
 
-  const createRoom = async (roomData: HotelRoomInsert) => {
+  const createRoom = async (roomData: Omit<HotelRoom, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!professionalId) {
+      toast.error('Professional ID não encontrado');
+      return;
+    }
+
     try {
       setLoading(true);
-      const newRoom = await hotelRoomsService.create(roomData);
+      setError(null);
+      
+      const roomDataWithProfessional = {
+        ...roomData,
+        professional_id: professionalId,
+        is_active: true
+      };
+      
+      const newRoom = await hotelRoomsApiService.create(roomDataWithProfessional);
+      
       setRooms(prev => [...prev, newRoom]);
       toast.success('Quarto criado com sucesso!');
       return newRoom;
@@ -68,7 +88,7 @@ export function useHotelRooms() {
   const updateRoom = async (id: string, updates: HotelRoomUpdate) => {
     try {
       setLoading(true);
-      const updatedRoom = await hotelRoomsService.update(id, updates);
+      const updatedRoom = await hotelRoomsApiService.update(id, updates);
       setRooms(prev => prev.map(room => room.id === id ? updatedRoom : room));
       toast.success('Quarto atualizado com sucesso!');
       return updatedRoom;
@@ -85,7 +105,7 @@ export function useHotelRooms() {
   const deleteRoom = async (id: string) => {
     try {
       setLoading(true);
-      await hotelRoomsService.delete(id);
+      await hotelRoomsApiService.delete(id);
       setRooms(prev => prev.filter(room => room.id !== id));
       toast.success('Quarto excluído com sucesso!');
     } catch (err) {
@@ -98,11 +118,11 @@ export function useHotelRooms() {
     }
   };
 
-  const getAvailableRooms = async (checkIn: string, checkOut: string) => {
+  const getAvailableRooms = async (checkIn: string, checkOut: string, roomType?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelRoomsService.getAvailable(checkIn, checkOut);
+      const data = await hotelRoomsApiService.getAvailable(checkIn, checkOut, roomType);
       return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao buscar quartos disponíveis';
@@ -115,18 +135,22 @@ export function useHotelRooms() {
   };
 
   useEffect(() => {
-    fetchRooms();
-  }, []);
+    if (professionalId) {
+      fetchRooms();
+    }
+  }, [professionalId]);
 
   return {
     rooms,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchRooms,
     createRoom,
     updateRoom,
     deleteRoom,
     getAvailableRooms,
+    refreshRooms: fetchRooms,
   };
 }
 
@@ -135,12 +159,15 @@ export function useHotelReservations() {
   const [reservations, setReservations] = useState<(HotelReservation & { hotel_rooms: HotelRoom })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchReservations = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelReservationsService.getAll();
+      const data = await hotelReservationsApiService.getAll(professionalId);
       setReservations(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar reservas';
@@ -154,7 +181,7 @@ export function useHotelReservations() {
   const createReservation = async (reservationData: HotelReservationInsert) => {
     try {
       setLoading(true);
-      const newReservation = await hotelReservationsService.create(reservationData);
+      const newReservation = await hotelReservationsApiService.create(reservationData);
       await fetchReservations(); // Refresh to get room data
       toast.success('Reserva criada com sucesso!');
       return newReservation;
@@ -171,7 +198,7 @@ export function useHotelReservations() {
   const updateReservation = async (id: string, updates: HotelReservationUpdate) => {
     try {
       setLoading(true);
-      const updatedReservation = await hotelReservationsService.update(id, updates);
+      const updatedReservation = await hotelReservationsApiService.update(id, updates);
       await fetchReservations(); // Refresh to get updated data
       toast.success('Reserva atualizada com sucesso!');
       return updatedReservation;
@@ -202,13 +229,16 @@ export function useHotelReservations() {
   };
 
   useEffect(() => {
-    fetchReservations();
-  }, []);
+    if (professionalId) {
+      fetchReservations();
+    }
+  }, [professionalId]);
 
   return {
     reservations,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchReservations,
     createReservation,
     updateReservation,
@@ -221,12 +251,15 @@ export function useHotelCheckins() {
   const [checkins, setCheckins] = useState<(HotelCheckin & { hotel_reservations: HotelReservation & { hotel_rooms: HotelRoom } })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchCheckins = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelCheckinsService.getAll();
+      const data = await hotelCheckinsApiService.getAll(professionalId);
       setCheckins(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar check-ins';
@@ -240,7 +273,7 @@ export function useHotelCheckins() {
   const createCheckin = async (checkinData: HotelCheckinInsert) => {
     try {
       setLoading(true);
-      const newCheckin = await hotelCheckinsService.create(checkinData);
+      const newCheckin = await hotelCheckinsApiService.create(checkinData);
       await fetchCheckins(); // Refresh to get full data
       toast.success('Check-in realizado com sucesso!');
       return newCheckin;
@@ -288,13 +321,16 @@ export function useHotelCheckins() {
   };
 
   useEffect(() => {
-    fetchCheckins();
-  }, []);
+    if (professionalId) {
+      fetchCheckins();
+    }
+  }, [professionalId]);
 
   return {
     checkins,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchCheckins,
     createCheckin,
     updateCheckin,
@@ -309,12 +345,15 @@ export function useHotelConsumption() {
   })[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchConsumption = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelConsumptionService.getAll();
+      const data = await hotelConsumptionApiService.getAll(professionalId);
       setConsumption(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar consumo';
@@ -328,12 +367,14 @@ export function useHotelConsumption() {
   const createConsumption = async (consumptionData: HotelConsumptionInsert) => {
     try {
       setLoading(true);
-      const newConsumption = await hotelConsumptionService.create(consumptionData);
+      const newConsumption = await hotelConsumptionApiService.create(consumptionData);
       await fetchConsumption(); // Refresh to get full data
+      toast.success('Consumo registrado com sucesso!');
       return newConsumption;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao criar consumo';
       setError(message);
+      toast.error(message);
       throw err;
     } finally {
       setLoading(false);
@@ -345,10 +386,12 @@ export function useHotelConsumption() {
       setLoading(true);
       const updatedConsumption = await hotelConsumptionService.update(id, updates);
       await fetchConsumption(); // Refresh to get updated data
+      toast.success('Consumo atualizado com sucesso!');
       return updatedConsumption;
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao atualizar consumo';
       setError(message);
+      toast.error(message);
       throw err;
     } finally {
       setLoading(false);
@@ -360,9 +403,11 @@ export function useHotelConsumption() {
       setLoading(true);
       await hotelConsumptionService.delete(id);
       setConsumption(prev => prev.filter(item => item.id !== id));
+      toast.success('Consumo excluído com sucesso!');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao excluir consumo';
       setError(message);
+      toast.error(message);
       throw err;
     } finally {
       setLoading(false);
@@ -396,13 +441,16 @@ export function useHotelConsumption() {
   };
 
   useEffect(() => {
-    fetchConsumption();
-  }, []);
+    if (professionalId) {
+      fetchConsumption();
+    }
+  }, [professionalId]);
 
   return {
     consumption,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchConsumption,
     createConsumption,
     updateConsumption,
@@ -417,12 +465,15 @@ export function useHotelConsumptionItems() {
   const [items, setItems] = useState<HotelConsumptionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchItems = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelConsumptionItemsService.getAll();
+      const data = await hotelConsumptionItemsService.getAll(professionalId);
       setItems(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar itens de consumo';
@@ -434,13 +485,16 @@ export function useHotelConsumptionItems() {
   };
 
   useEffect(() => {
-    fetchItems();
-  }, []);
+    if (professionalId) {
+      fetchItems();
+    }
+  }, [professionalId]);
 
   return {
     items,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchItems,
   };
 }
@@ -459,12 +513,15 @@ export function useHotelDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { professionalId, loading: professionalLoading, error: professionalError } = useProfessional();
 
   const fetchStats = async () => {
+    if (!professionalId) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await hotelDashboardService.getDashboardData('');
+      const data = await hotelDashboardService.getDashboardData(professionalId);
       setStats(data);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar estatísticas';
@@ -476,13 +533,31 @@ export function useHotelDashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
-    // Refresh stats every 5 minutes
-    const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (professionalId) {
+      fetchStats();
+      // Refresh stats every 5 minutes
+      const interval = setInterval(fetchStats, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [professionalId]);
 
   const getDashboardData = async (days: number = 30) => {
+    // Aguardar o professionalId ser carregado
+    let currentProfessionalId = professionalId;
+    if (!currentProfessionalId) {
+      console.log('⏳ Aguardando professionalId ser carregado...');
+      try {
+        currentProfessionalId = await useAwaitProfessional();
+      } catch (error) {
+        console.error('Erro ao obter professionalId:', error);
+        throw new Error('Professional ID não encontrado');
+      }
+    }
+    
+    if (!currentProfessionalId) {
+      throw new Error('Professional ID não encontrado');
+    }
+    
     try {
       setLoading(true);
       setError(null);
@@ -492,7 +567,7 @@ export function useHotelDashboard() {
       startDate.setDate(endDate.getDate() - days);
       
       const data = await hotelDashboardService.getDashboardData(
-        '',
+        currentProfessionalId,
         startDate.toISOString().split('T')[0],
         endDate.toISOString().split('T')[0]
       );
@@ -534,8 +609,9 @@ export function useHotelDashboard() {
 
   return {
     stats,
-    loading,
-    error,
+    loading: loading || professionalLoading,
+    error: error || professionalError,
+    professionalId,
     fetchStats,
     getDashboardData,
   };

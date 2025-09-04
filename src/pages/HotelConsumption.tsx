@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ShoppingCart } from 'lucide-react';
-import Button from '../components/Button';
+import { toast } from 'sonner';
+import { Button } from '../components/ui/button';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HotelConsumptionForm from '../components/HotelConsumptionForm';
 import HotelConsumptionList from '../components/HotelConsumptionList';
-import { toast } from 'sonner';
+import { supabase } from '../lib/supabase';
 
 interface HotelReservation {
   id: string;
@@ -47,10 +48,16 @@ export default function HotelConsumption() {
   const loadReservation = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Usuário não autenticado');
+        navigate('/login');
+        return;
+      }
+      
       const response = await fetch(`/api/hotel-reservations/${reservationId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${session.access_token}`
         }
       });
 

@@ -48,11 +48,13 @@ const HotelNotifications: React.FC = () => {
     try {
       // Carregar reservas para gerar notificações
       const reservationsResponse = await fetch('/api/hotel-reservations');
-      const reservationsData = await reservationsResponse.json();
+      const reservationsResult = await reservationsResponse.json();
+      const reservationsData = Array.isArray(reservationsResult) ? reservationsResult : reservationsResult.data || [];
       
       // Carregar dados de check-ins
       const checkinsResponse = await fetch('/api/hotel-checkins');
-      const checkinsData = await checkinsResponse.json();
+      const checkinsResult = await checkinsResponse.json();
+      const checkinsData = Array.isArray(checkinsResult) ? checkinsResult : checkinsResult.data || [];
       
       const today = new Date();
       const tomorrow = new Date(today);

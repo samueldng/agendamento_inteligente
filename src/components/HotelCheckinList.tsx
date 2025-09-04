@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, Users, CreditCard, User, LogIn, LogOut, Edit, Eye, Filter, CheckCircle, XCircle } from 'lucide-react';
 import { checkinsApi, reservationsApi } from '../lib/api/hotel';
 import { HotelReservation, HotelCheckin } from '../lib/supabase';
-import { Button } from './ui/Button';
-import { LoadingSpinner } from './ui/LoadingSpinner';
+import { Button } from './ui/button';
+import LoadingSpinner from './LoadingSpinner';
 import { Empty } from './ui/Empty';
 import HotelCheckinForm from './HotelCheckinForm';
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface User {
   id: string;
@@ -18,17 +19,16 @@ export function useAuth(): AuthState {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simular carregamento de dados do usuário
+    // Carregar dados do usuário autenticado
     const loadUser = async () => {
       try {
-        const token = localStorage.getItem('token');
-        if (token) {
-          // Simular usuário logado para demonstração
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
           setUser({
-            id: '1',
-            email: 'admin@example.com',
-            name: 'Administrador',
-            role: 'admin'
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email || '',
+            role: session.user.user_metadata?.role || 'user'
           });
         }
       } catch (error) {

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Test Login</h1>
+    <div id="status">Testando login...</div>
+    
+    <script>
+        const { createClient } = supabase;
+        
+        const supabaseUrl = 'https://nxvzrqewfgbcwsovaaiv.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54dnpycWV3ZmdiY3dzb3ZhYWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MDkzNzksImV4cCI6MjA3MTM4NTM3OX0.A5nhavahrp5W_4tUGkcdpcCFGKWPv7Y6f8ZaOsQsr8Q';
+        
+        const client = createClient(supabaseUrl, supabaseKey);
+        
+        async function testLogin() {
+            try {
+                console.log('Testando login...');
+                document.getElementById('status').innerHTML = 'Tentando fazer login...';
+                
+                const { data, error } = await client.auth.signInWithPassword({
+                    email: 'admin@hotel.com',
+                    password: 'admin123'
+                });
+                
+                if (error) {
+                    console.error('Erro no login:', error);
+                    document.getElementById('status').innerHTML = 'Erro: ' + error.message;
+                    return;
+                }
+                
+                console.log('Login realizado com sucesso:', data);
+                document.getElementById('status').innerHTML = 'Login realizado com sucesso! User ID: ' + data.user.id;
+                
+                // Testar busca do professional
+                const token = data.session.access_token;
+                console.log('Token:', token);
+                
+                const response = await fetch('http://localhost:3001/api/professionals/by-user', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const professional = await response.json();
+                console.log('Professional encontrado:', professional);
+                document.getElementById('status').innerHTML += '<br>Professional ID: ' + professional.id;
+                
+            } catch (error) {
+                console.error('Erro geral:', error);
+                document.getElementById('status').innerHTML = 'Erro: ' + error.message;
+            }
+        }
+        
+        test

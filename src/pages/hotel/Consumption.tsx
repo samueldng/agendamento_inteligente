@@ -110,11 +110,12 @@ export default function Consumption() {
           <p className="text-gray-600 mt-1">Gerencie o consumo de hóspedes</p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Consumo
-            </Button>
+          <DialogTrigger 
+            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+            onClick={() => setIsFormOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Consumo
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>

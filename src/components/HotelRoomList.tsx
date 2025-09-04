@@ -1,17 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Bed, DollarSign, Edit, Trash2, MoreVertical, CheckCircle, XCircle, Clock, Wrench } from 'lucide-react';
+import { Plus, Users, Bed, DollarSign, Edit, Trash2, MoreVertical, CheckCircle, XCircle, Clock, Wrench, Wifi, Car, Coffee, Tv, Wind, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { HotelRoomForm } from './HotelRoomForm';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { Empty } from '@/components/ui/empty';
 import { formatCurrency } from '@/lib/utils';
 import { roomsApi, reservationsApi } from '@/lib/api/hotel';
 import { HotelRoom as BaseHotelRoom, HotelReservation } from '@/lib/validations/hotel';
 
 // Extended interface for room with status and additional properties
-// Use ExtendedHotelRoom as the main type
+interface ExtendedHotelRoom extends BaseHotelRoom {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: 'available' | 'occupied' | 'maintenance' | 'cleaning';
+  currentReservation?: {
+    id: string;
+    guestName: string;
+    checkInDate: string;
+    checkOutDate: string;
+    status: string;
+  };
+  nextReservation?: {
+    id: string;
+    guestName: string;
+    checkInDate: string;
+    checkOutDate: string;
+  };
+  occupancyRate?: number;
+}
+
 type HotelRoom = ExtendedHotelRoom;
 
 interface HotelRoomListProps {

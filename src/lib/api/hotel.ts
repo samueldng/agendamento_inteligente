@@ -47,13 +47,20 @@ export const roomsApi = {
 
   // Create new room
   async create(room: HotelRoomInsert): Promise<HotelRoom> {
+    console.log('🏨 [roomsApi.create] Iniciando criação de quarto com dados:', room);
+    
     const { data, error } = await supabase
       .from('hotel_rooms')
       .insert(room)
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ [roomsApi.create] Erro ao criar quarto:', error);
+      throw error;
+    }
+    
+    console.log('✅ [roomsApi.create] Quarto criado com sucesso:', data);
     return data;
   },
 

@@ -2,25 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HotelReservationList from '../components/HotelReservationList';
-import { useAuthStore } from '../stores/authStore';
+import { supabase } from '../lib/supabase';
 
 export default function HotelReservations() {
-  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [professionalId, setProfessionalId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadProfessionalData = async () => {
       try {
-        if (!user?.id) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) {
           setLoading(false);
           return;
         }
 
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/professionals?user_id=${user.id}`, {
+        const response = await fetch(`/api/professionals?user_id=${session.user.id}`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${session.access_token}`
           }
         });
 
@@ -38,7 +37,7 @@ export default function HotelReservations() {
     };
 
     loadProfessionalData();
-  }, [user]);
+  }, []);
 
   if (loading) {
     return <LoadingSpinner />;

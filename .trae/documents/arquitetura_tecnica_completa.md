@@ -1,4 +1,5 @@
 # Arquitetura Técnica Completa - Sis IA Go
+
 ## Sistema de Agendamento Inteligente Multi-Setorial
 
 ## 1. Arquitetura Geral do Sistema
@@ -58,87 +59,119 @@ graph TD
 ## 2. Stack Tecnológico Detalhado
 
 ### 2.1 Frontend
-- **Framework**: React 18 com TypeScript
-- **Build Tool**: Vite 5.x
-- **Styling**: Tailwind CSS 3.x
-- **State Management**: Zustand + React Query
-- **Routing**: React Router v6
-- **Forms**: React Hook Form + Zod
-- **UI Components**: Radix UI + Custom Components
-- **Charts**: Recharts
-- **Date/Time**: date-fns
-- **Icons**: Lucide React
+
+* **Framework**: React 18 com TypeScript
+
+* **Build Tool**: Vite 5.x
+
+* **Styling**: Tailwind CSS 3.x
+
+* **State Management**: Zustand + React Query
+
+* **Routing**: React Router v6
+
+* **Forms**: React Hook Form + Zod
+
+* **UI Components**: Radix UI + Custom Components
+
+* **Charts**: Recharts
+
+* **Date/Time**: date-fns
+
+* **Icons**: Lucide React
 
 ### 2.2 Backend
-- **BaaS**: Supabase (PostgreSQL + Auth + Storage + Realtime)
-- **Database**: PostgreSQL 15+
-- **Authentication**: Supabase Auth (JWT)
-- **File Storage**: Supabase Storage
-- **Real-time**: Supabase Realtime
-- **Cache**: Redis (para sessões e cache de dados)
+
+* **BaaS**: Supabase (PostgreSQL + Auth + Storage + Realtime)
+
+* **Database**: PostgreSQL 15+
+
+* **Authentication**: Supabase Auth (JWT)
+
+* **File Storage**: Supabase Storage
+
+* **Real-time**: Supabase Realtime
+
+* **Cache**: Redis (para sessões e cache de dados)
 
 ### 2.3 Integrações Externas
-- **WhatsApp**: WhatsApp Business API
-- **Pagamentos**: Stripe + PagSeguro
-- **Email**: Resend + SendGrid
-- **SMS**: Twilio
-- **Calendar**: Google Calendar API
-- **Maps**: Google Maps API
+
+* **WhatsApp**: WhatsApp Business API
+
+* **Pagamentos**: Stripe + PagSeguro
+
+* **Email**: Resend + SendGrid
+
+* **SMS**: Twilio
+
+* **Calendar**: Google Calendar API
+
+* **Maps**: Google Maps API
 
 ### 2.4 DevOps e Infraestrutura
-- **Hosting Frontend**: Vercel
-- **Hosting Backend**: Supabase Cloud
-- **CDN**: Cloudflare
-- **Monitoring**: Sentry + Vercel Analytics
-- **CI/CD**: GitHub Actions
-- **Domain**: Cloudflare DNS
+
+* **Hosting Frontend**: Vercel
+
+* **Hosting Backend**: Supabase Cloud
+
+* **CDN**: Cloudflare
+
+* **Monitoring**: Sentry + Vercel Analytics
+
+* **CI/CD**: GitHub Actions
+
+* **Domain**: Cloudflare DNS
 
 ## 3. Estrutura de Rotas Frontend
 
-| Rota | Componente | Descrição | Autenticação |
-|------|------------|-----------|-------------|
-| `/` | SectorSelection | Seleção de setor | Não |
-| `/login` | LoginPage | Página de login | Não |
-| `/register` | RegisterPage | Página de registro | Não |
-| `/dashboard` | Dashboard | Dashboard principal | Sim |
-| `/appointments` | AppointmentsList | Lista de agendamentos | Sim |
-| `/appointments/new` | AppointmentForm | Novo agendamento | Sim |
-| `/clients` | ClientsList | Lista de clientes | Sim |
-| `/clients/:id` | ClientProfile | Perfil do cliente | Sim |
-| `/calendar` | CalendarView | Visualização de calendário | Sim |
-| `/reports` | ReportsPage | Relatórios e analytics | Sim |
-| `/settings` | SettingsPage | Configurações | Sim |
-| `/profile` | UserProfile | Perfil do usuário | Sim |
+| Rota                | Componente       | Descrição                  | Autenticação |
+| ------------------- | ---------------- | -------------------------- | ------------ |
+| `/`                 | SectorSelection  | Seleção de setor           | Não          |
+| `/login`            | LoginPage        | Página de login            | Não          |
+| `/register`         | RegisterPage     | Página de registro         | Não          |
+| `/dashboard`        | Dashboard        | Dashboard principal        | Sim          |
+| `/appointments`     | AppointmentsList | Lista de agendamentos      | Sim          |
+| `/appointments/new` | AppointmentForm  | Novo agendamento           | Sim          |
+| `/clients`          | ClientsList      | Lista de clientes          | Sim          |
+| `/clients/:id`      | ClientProfile    | Perfil do cliente          | Sim          |
+| `/calendar`         | CalendarView     | Visualização de calendário | Sim          |
+| `/reports`          | ReportsPage      | Relatórios e analytics     | Sim          |
+| `/settings`         | SettingsPage     | Configurações              | Sim          |
+| `/profile`          | UserProfile      | Perfil do usuário          | Sim          |
 
 ### 3.1 Rotas Específicas por Setor
 
 #### Hotelaria
-| Rota | Componente | Descrição |
-|------|------------|----------|
-| `/hotel-rooms` | HotelRoomsList | Gestão de quartos |
-| `/hotel-reservations` | HotelReservationsList | Gestão de reservas |
-| `/hotel-checkins` | HotelCheckinsList | Check-ins/Check-outs |
-| `/hotel-pricing` | HotelPricingPage | Gestão de tarifas |
+
+| Rota                  | Componente            | Descrição            |
+| --------------------- | --------------------- | -------------------- |
+| `/hotel-rooms`        | HotelRoomsList        | Gestão de quartos    |
+| `/hotel-reservations` | HotelReservationsList | Gestão de reservas   |
+| `/hotel-checkins`     | HotelCheckinsList     | Check-ins/Check-outs |
+| `/hotel-pricing`      | HotelPricingPage      | Gestão de tarifas    |
 
 #### Saúde
-| Rota | Componente | Descrição |
-|------|------------|----------|
-| `/patients` | PatientsList | Gestão de pacientes |
-| `/consultations` | ConsultationsList | Consultas médicas |
-| `/medical-records` | MedicalRecordsList | Prontuários |
-| `/prescriptions` | PrescriptionsList | Receitas médicas |
+
+| Rota               | Componente         | Descrição           |
+| ------------------ | ------------------ | ------------------- |
+| `/patients`        | PatientsList       | Gestão de pacientes |
+| `/consultations`   | ConsultationsList  | Consultas médicas   |
+| `/medical-records` | MedicalRecordsList | Prontuários         |
+| `/prescriptions`   | PrescriptionsList  | Receitas médicas    |
 
 #### Beleza
-| Rota | Componente | Descrição |
-|------|------------|----------|
-| `/treatments` | TreatmentsList | Gestão de tratamentos |
-| `/professionals` | ProfessionalsList | Gestão de profissionais |
-| `/services` | ServicesList | Catálogo de serviços |
-| `/beauty-packages` | PackagesList | Pacotes de beleza |
+
+| Rota               | Componente        | Descrição               |
+| ------------------ | ----------------- | ----------------------- |
+| `/treatments`      | TreatmentsList    | Gestão de tratamentos   |
+| `/professionals`   | ProfessionalsList | Gestão de profissionais |
+| `/services`        | ServicesList      | Catálogo de serviços    |
+| `/beauty-packages` | PackagesList      | Pacotes de beleza       |
 
 ## 4. API Endpoints
 
 ### 4.1 Autenticação
+
 ```typescript
 // Supabase Auth endpoints (built-in)
 POST /auth/v1/signup
@@ -151,6 +184,7 @@ POST /auth/v1/user
 ### 4.2 Core APIs
 
 #### Agendamentos
+
 ```typescript
 GET    /api/appointments          // Listar agendamentos
 POST   /api/appointments          // Criar agendamento
@@ -161,6 +195,7 @@ POST   /api/appointments/:id/confirm // Confirmar agendamento
 ```
 
 #### Clientes
+
 ```typescript
 GET    /api/clients               // Listar clientes
 POST   /api/clients               // Criar cliente
@@ -171,6 +206,7 @@ GET    /api/clients/:id/history   // Histórico do cliente
 ```
 
 #### Relatórios
+
 ```typescript
 GET    /api/reports/dashboard     // Dados do dashboard
 GET    /api/reports/appointments  // Relatório de agendamentos
@@ -182,6 +218,7 @@ POST   /api/reports/export        // Exportar relatório
 ### 4.3 APIs Específicas por Setor
 
 #### Hotelaria
+
 ```typescript
 // Quartos
 GET    /api/hotel/rooms           // Listar quartos
@@ -202,6 +239,7 @@ PUT    /api/hotel/pricing         // Atualizar tarifas
 ```
 
 #### Saúde
+
 ```typescript
 // Pacientes
 GET    /api/health/patients       // Listar pacientes
@@ -361,6 +399,7 @@ erDiagram
 ### 5.2 Schemas SQL
 
 #### Tabelas Core
+
 ```sql
 -- Usuários
 CREATE TABLE users (
@@ -443,6 +482,7 @@ CREATE TABLE appointments (
 ```
 
 #### Tabelas Específicas - Hotelaria
+
 ```sql
 -- Quartos
 CREATE TABLE hotel_rooms (
@@ -495,6 +535,7 @@ CREATE TABLE hotel_pricing (
 ```
 
 #### Tabelas Específicas - Saúde
+
 ```sql
 -- Prontuários Médicos
 CREATE TABLE medical_records (
@@ -521,6 +562,7 @@ CREATE TABLE medical_exams (
 ```
 
 ### 5.3 Índices e Otimizações
+
 ```sql
 -- Índices para performance
 CREATE INDEX idx_appointments_business_date ON appointments(business_id, start_time);
@@ -537,6 +579,7 @@ CREATE INDEX idx_clients_email ON clients(email);
 ```
 
 ### 5.4 Row Level Security (RLS)
+
 ```sql
 -- Habilitar RLS
 ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
@@ -565,6 +608,7 @@ CREATE POLICY "Users can only access their business appointments" ON appointment
 ## 6. Arquitetura de Componentes Frontend
 
 ### 6.1 Estrutura de Pastas
+
 ```
 src/
 ├── components/
@@ -586,6 +630,7 @@ src/
 ```
 
 ### 6.2 Gerenciamento de Estado
+
 ```typescript
 // stores/authStore.ts
 interface AuthState {
@@ -622,46 +667,71 @@ interface AppointmentState {
 ## 7. Segurança e Compliance
 
 ### 7.1 Autenticação e Autorização
-- **JWT Tokens**: Supabase Auth com refresh tokens
-- **Row Level Security**: Políticas no banco de dados
-- **Rate Limiting**: Proteção contra ataques de força bruta
-- **CORS**: Configuração adequada para produção
+
+* **JWT Tokens**: Supabase Auth com refresh tokens
+
+* **Row Level Security**: Políticas no banco de dados
+
+* **Rate Limiting**: Proteção contra ataques de força bruta
+
+* **CORS**: Configuração adequada para produção
 
 ### 7.2 Proteção de Dados
-- **Criptografia**: TLS 1.3 para dados em trânsito
-- **Hashing**: bcrypt para senhas
-- **Sanitização**: Validação e limpeza de inputs
-- **LGPD Compliance**: Consentimento e direito ao esquecimento
+
+* **Criptografia**: TLS 1.3 para dados em trânsito
+
+* **Hashing**: bcrypt para senhas
+
+* **Sanitização**: Validação e limpeza de inputs
+
+* **LGPD Compliance**: Consentimento e direito ao esquecimento
 
 ### 7.3 Monitoramento e Logs
-- **Error Tracking**: Sentry para erros em produção
-- **Performance**: Vercel Analytics
-- **Security**: Logs de auditoria
-- **Uptime**: Monitoramento de disponibilidade
+
+* **Error Tracking**: Sentry para erros em produção
+
+* **Performance**: Vercel Analytics
+
+* **Security**: Logs de auditoria
+
+* **Uptime**: Monitoramento de disponibilidade
 
 ## 8. Performance e Otimização
 
 ### 8.1 Frontend
-- **Code Splitting**: Lazy loading de rotas
-- **Bundle Optimization**: Tree shaking e minificação
-- **Image Optimization**: WebP e lazy loading
-- **Caching**: Service Workers e cache strategies
+
+* **Code Splitting**: Lazy loading de rotas
+
+* **Bundle Optimization**: Tree shaking e minificação
+
+* **Image Optimization**: WebP e lazy loading
+
+* **Caching**: Service Workers e cache strategies
 
 ### 8.2 Backend
-- **Database Indexing**: Índices otimizados
-- **Query Optimization**: Queries eficientes
-- **Connection Pooling**: Supabase connection pooling
-- **CDN**: Cloudflare para assets estáticos
+
+* **Database Indexing**: Índices otimizados
+
+* **Query Optimization**: Queries eficientes
+
+* **Connection Pooling**: Supabase connection pooling
+
+* **CDN**: Cloudflare para assets estáticos
 
 ### 8.3 Métricas de Performance
-- **Core Web Vitals**: LCP < 2.5s, FID < 100ms, CLS < 0.1
-- **Time to Interactive**: < 3s
-- **Bundle Size**: < 500KB gzipped
-- **API Response Time**: < 200ms (95th percentile)
+
+* **Core Web Vitals**: LCP < 2.5s, FID < 100ms, CLS < 0.1
+
+* **Time to Interactive**: < 3s
+
+* **Bundle Size**: < 500KB gzipped
+
+* **API Response Time**: < 200ms (95th percentile)
 
 ## 9. Deployment e DevOps
 
 ### 9.1 CI/CD Pipeline
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy to Production
@@ -691,29 +761,41 @@ jobs:
 ```
 
 ### 9.2 Ambientes
-- **Development**: Local com Supabase local
-- **Staging**: Vercel preview com Supabase staging
-- **Production**: Vercel production com Supabase production
+
+* **Development**: Local com Supabase local
+
+* **Staging**: Vercel preview com Supabase staging
+
+* **Production**: Vercel production com Supabase production
 
 ### 9.3 Backup e Recovery
-- **Database Backup**: Backup automático diário
-- **File Backup**: Supabase Storage backup
-- **Code Backup**: Git repository
-- **Recovery Time**: < 1 hora
+
+* **Database Backup**: Backup automático diário
+
+* **File Backup**: Supabase Storage backup
+
+* **Code Backup**: Git repository
+
+* **Recovery Time**: < 1 hora
 
 ## 10. Conclusão
 
 Esta arquitetura técnica fornece uma base sólida e escalável para o sistema Sis IA Go, garantindo:
 
-- **Escalabilidade**: Suporte a milhares de usuários
-- **Segurança**: Proteção robusta de dados
-- **Performance**: Carregamento rápido e responsivo
-- **Manutenibilidade**: Código limpo e bem estruturado
-- **Flexibilidade**: Adaptável a diferentes setores
+* **Escalabilidade**: Suporte a milhares de usuários
+
+* **Segurança**: Proteção robusta de dados
+
+* **Performance**: Carregamento rápido e responsivo
+
+* **Manutenibilidade**: Código limpo e bem estruturado
+
+* **Flexibilidade**: Adaptável a diferentes setores
 
 A implementação seguindo esta arquitetura resultará em um sistema robusto, seguro e pronto para produção.
 
----
-*Documento criado em: Janeiro 2025*  
-*Versão: 1.0*  
+***
+
+*Documento criado em: Janeiro 2025*\
+*Versão: 1.0*\
 *Status: Aprovação Pendente*

@@ -1,5 +1,5 @@
-import { ReactNode, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { ReactNode, useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -15,11 +15,14 @@ import {
   Bed,
   CalendarCheck,
   LogIn,
-  Bell
+  Bell,
+  LogOut,
+  User
 } from 'lucide-react';
 import { useSector, useSectorNavigation } from '../hooks/useSector.tsx';
 import HotelNotifications from '../components/hotel/HotelNotifications';
 import { useNotifications } from '../hooks/useNotifications';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -55,15 +58,42 @@ const iconMap: Record<string, ReactNode> = {
 export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { selectedSector } = useSector();
   const navigation = useSectorNavigation();
+  const { user, signOut } = useAuth();
   
   // Verificar se estamos no setor hoteleiro
   const isHotelSector = selectedSector?.name === 'Hotel' || location.pathname.startsWith('/hotel');
   
   // Hook de notificações apenas para o setor hoteleiro
   const { unreadCount } = useNotifications();
+
+  // Fechar menu do usuário ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -179,6 +209,37 @@ export default function Layout({ children }: LayoutProps) {
               <div className="flex items-center space-x-2">
                 <div className="h-2 w-2 bg-green-400 rounded-full"></div>
                 <span className="text-sm text-gray-600">Sistema Online</span>
+              </div>
+              
+              {/* User Menu */}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 p-2 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-md"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="text-sm font-medium hidden sm:block">
+                    {user?.email?.split('@')[0] || 'Usuário'}
+                  </span>
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <div className="py-1">
+                      <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                        <div className="font-medium">{user?.email?.split('@')[0] || 'Usuário'}</div>
+                        <div className="text-xs text-gray-500">{user?.email}</div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sair
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

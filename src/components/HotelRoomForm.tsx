@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bed, Wifi, Car, Coffee, Tv, Wind, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { FormField } from './ui/form-field';
-import { Modal } from './ui/modal';
+import Modal from './Modal';
 import { toast } from 'sonner';
 import { roomsApi } from '../lib/api/hotel';
 import { useFormSubmission } from '../hooks/useAsyncOperation';
@@ -16,9 +16,9 @@ interface HotelRoom {
   id?: string;
   professional_id?: string;
   room_number: string;
-  room_type: 'standard' | 'deluxe' | 'suite' | 'presidential';
+  room_type: 'single' | 'double' | 'suite' | 'family';
   capacity: number;
-  price_per_night: number;
+  base_price: number;
   amenities?: string[];
   description?: string;
   is_active?: boolean;
@@ -33,10 +33,10 @@ interface HotelRoomFormProps {
 }
 
 const roomTypes = [
-  { value: 'standard', label: 'Quarto Standard' },
-  { value: 'deluxe', label: 'Quarto Deluxe' },
+  { value: 'single', label: 'Quarto Single' },
+  { value: 'double', label: 'Quarto Duplo' },
   { value: 'suite', label: 'Suíte' },
-  { value: 'presidential', label: 'Suíte Presidencial' }
+  { value: 'family', label: 'Quarto Família' }
 ];
 
 // Status options removed as they're not part of the room schema
@@ -65,9 +65,9 @@ export default function HotelRoomForm({ isOpen, onClose, onSubmit, room, profess
     resolver: zodResolver(hotelRoomSchema),
     defaultValues: {
       room_number: '',
-      room_type: 'standard',
+      room_type: 'single',
       capacity: 1,
-      price_per_night: 0,
+      base_price: 0,
       amenities: [],
       description: '',
       is_active: true
@@ -82,7 +82,7 @@ export default function HotelRoomForm({ isOpen, onClose, onSubmit, room, profess
         room_number: room.room_number,
         room_type: room.room_type,
         capacity: room.capacity,
-        price_per_night: room.price_per_night,
+        base_price: room.base_price,
         amenities: room.amenities || [],
         description: room.description || '',
         is_active: room.is_active ?? true
@@ -90,9 +90,9 @@ export default function HotelRoomForm({ isOpen, onClose, onSubmit, room, profess
     } else {
       reset({
         room_number: '',
-        room_type: 'standard',
+        room_type: 'single',
         capacity: 1,
-        price_per_night: 0,
+        base_price: 0,
         amenities: [],
         description: '',
         is_active: true
@@ -101,35 +101,30 @@ export default function HotelRoomForm({ isOpen, onClose, onSubmit, room, profess
     setErrors({});
   }, [room, professionalId, isOpen, reset]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
 
-    if (!formData.room_number.trim()) {
-      newErrors.room_number = 'Número do quarto é obrigatório';
-    }
-
-    if (formData.capacity < 1) {
-      newErrors.capacity = 'Capacidade deve ser maior que 0';
-    }
-
-    if (formData.price_per_night <= 0) {
-      newErrors.price_per_night = 'Preço por noite deve ser maior que 0';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const onFormSubmit = async (data: HotelRoomFormData) => {
+    console.log('🏨 HotelRoomForm onFormSubmit called with data:', data);
+    console.log('🏨 Professional ID:', professionalId);
+    console.log('🏨 Room (editing):', room);
+    
     await submitForm(async () => {
       if (room?.id) {
         // Update existing room
+        console.log('🏨 Updating room with ID:', room.id);
         const updatedRoom = await roomsApi.update(room.id, data);
+        console.log('🏨 Room updated successfully:', updatedRoom);
         toast.success('Quarto atualizado com sucesso!');
         onSubmit(updatedRoom);
       } else {
-        // Create new room
-        const newRoom = await roomsApi.create(data);
+        // Create new room - include professional_id
+        const roomData = {
+          ...data,
+          professional_id: professionalId
+        };
+        console.log('🏨 Creating new room with data:', roomData);
+        const newRoom = await roomsApi.create(roomData);
+        console.log('🏨 Room created successfully:', newRoom);
         toast.success('Quarto criado com sucesso!');
         onSubmit(newRoom);
       }
@@ -214,19 +209,19 @@ export default function HotelRoomForm({ isOpen, onClose, onSubmit, room, profess
 
           <FormField
             label="Preço por Noite (R$)"
-            error={formErrors.price_per_night?.message}
+            error={formErrors.base_price?.message}
             required
           >
             <input
               type="number"
               min="0"
               step="0.01"
-              {...register('price_per_night', { valueAsNumber: true })}
+              {...register('base_price', { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="0.00"
             />
-            {formErrors.price_per_night && (
-              <p className="text-sm text-red-600">{formErrors.price_per_night.message}</p>
+            {formErrors.base_price && (
+              <p className="text-sm text-red-600">{formErrors.base_price.message}</p>
             )}
           </FormField>
 

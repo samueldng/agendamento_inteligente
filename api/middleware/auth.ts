@@ -23,25 +23,68 @@ export const authenticateToken = async (
       return res.status(401).json({ error: 'Token de acesso requerido' });
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) {
-      return res.status(500).json({ error: 'Configuração de JWT não encontrada' });
-    }
-
-    const decoded = jwt.verify(token, jwtSecret) as any;
+    // Verificar o token com o Supabase
+    const { data: { user: supabaseUser }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
-    // Verificar se o usuário ainda existe no banco
-    const { data: user, error } = await supabaseAdmin
-      .from('users')
-      .select('id, email, role')
-      .eq('id', decoded.userId)
-      .single();
-
-    if (error || !user) {
+    if (authError || !supabaseUser) {
       return res.status(401).json({ error: 'Token inválido' });
     }
 
-    req.user = user;
+    // Buscar dados adicionais do// Buscar usuário na tabela users por ID ou email
+    const { data: user, error } = await supabaseAdmin
+      .from('users')
+      .select('id, email, role')
+      .or(`id.eq.${supabaseUser.id},email.eq.${supabaseUser.email}`)
+      .single();
+
+    // Se o usuário não existe na tabela users, criar um registro básico
+    if (!user) {
+      const { data: insertedUser, error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: supabaseUser.id,
+          email: supabaseUser.email || '',
+          name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'Usuário',
+          role: 'professional'
+        })
+        .select('id, email, role')
+        .single();
+      
+      if (insertError) {
+        console.error('Erro ao criar usuário:', insertError);
+        // Se o erro for de duplicação, tentar buscar o usuário novamente
+        if (insertError.code === '23505') {
+          const { data: existingUser } = await supabaseAdmin
+            .from('users')
+            .select('id, email, role')
+            .eq('id', supabaseUser.id)
+            .single();
+          
+          if (existingUser) {
+            req.user = existingUser;
+          } else {
+            // Fallback: usar dados do Supabase Auth
+            req.user = {
+              id: supabaseUser.id,
+              email: supabaseUser.email || '',
+              role: 'professional'
+            };
+          }
+        } else {
+          // Fallback: usar dados do Supabase Auth
+          req.user = {
+            id: supabaseUser.id,
+            email: supabaseUser.email || '',
+            role: 'professional'
+          };
+        }
+      } else {
+        req.user = insertedUser;
+      }
+    } else {
+      req.user = user;
+    }
+
     next();
   } catch (error) {
     console.error('Erro na autenticação:', error);

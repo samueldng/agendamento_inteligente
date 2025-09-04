@@ -35,7 +35,7 @@ const getNotifications = async (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
 
-    res.json(notifications || []);
+    res.json({ notifications: notifications || [] });
   } catch (error) {
     console.error('Erro ao buscar notificações:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });

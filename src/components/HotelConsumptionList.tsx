@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Calendar, Trash2, Edit, Plus } from 'lucide-react';
-import { Button } from './ui/Button';
-import { LoadingSpinner } from './ui/LoadingSpinner';
-import { Empty } from './ui/Empty';
+import { Button } from './ui/button';
+import { LoadingSpinner } from './ui/loading-spinner';
+import { Empty } from './ui/empty';
 import { consumptionApi } from '../lib/api/hotel';
 import { toast } from 'sonner';
 

@@ -57,7 +57,24 @@ export function Dashboard() {
       setLoading(true);
       setError(null);
       const data = await getDashboardData(parseInt(selectedPeriod));
-      setDashboardData(data);
+      setDashboardData({
+        totalRooms: data.totalRooms,
+        availableRooms: data.availableRooms,
+        occupiedRooms: data.occupiedRooms,
+        maintenanceRooms: 0,
+        totalReservations: data.recentReservations?.length || 0,
+        activeReservations: data.recentReservations?.length || 0,
+        checkedInGuests: data.checkedInGuests,
+        pendingCheckouts: 0,
+        totalRevenue: data.monthlyRevenue,
+        monthlyRevenue: data.monthlyRevenue,
+        averageStay: 2.5,
+        occupancyRate: data.occupancyRate,
+        recentReservations: data.recentReservations || [],
+        recentCheckins: data.recentCheckins || [],
+        recentConsumption: data.recentConsumption || [],
+        monthlyStats: []
+      });
     } catch (err) {
       console.error('Erro ao carregar dashboard:', err);
       setError('Erro ao carregar dados do dashboard');
@@ -66,6 +83,8 @@ export function Dashboard() {
       setLoading(false);
     }
   };
+
+  // Load dashboard data on mount and period change
 
   useEffect(() => {
     loadDashboardData();

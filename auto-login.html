@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto Login Test</title>
+</head>
+<body>
+    <h1>Auto Login Test</h1>
+    <div id="status">Iniciando...</div>
+    
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js';
+        
+        const supabaseUrl = 'https://nxvzrqewfgbcwsovaaiv.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54dnpycWV3ZmdiY3dzb3ZhYWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MDkzNzksImV4cCI6MjA3MTM4NTM3OX0.A5nhavahrp5W_4tUGkcdpcCFGKWPv7Y6f8ZaOsQsr8Q';
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        async function autoLogin() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                statusDiv.innerHTML = 'Fazendo login...';
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'admin@hotel.com',
+                    password: 'admin123'
+                });
+                
+                if (error) {
+                    statusDiv.innerHTML = `Erro no login: ${error.message}`;
+                    return;
+                }
+                
+                statusDiv.innerHTML = 'Login realizado! Redirecionando...';
+                
+                // Aguardar um pouco e redirecionar
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:5173/hotel-dashboard';
+                }, 2000);
+                
+            } catch (error) {
+                statusDiv.innerHTML = `Erro: ${error.message}`;
+            }
+        }
+        
+        autoLogin();
+    </script>
+</body>
+</html>

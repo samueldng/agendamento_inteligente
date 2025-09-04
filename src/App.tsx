@@ -23,6 +23,15 @@ import { Reservations } from "@/pages/hotel/Reservations";
 import Checkins from "@/pages/hotel/Checkins";
 import Consumption from "@/pages/hotel/Consumption";
 import { Dashboard as HotelDashboardNew } from "@/pages/hotel/Dashboard";
+import { TestRoomForm } from './pages/hotel/TestRoomForm';
+import { SimpleTest } from './pages/hotel/SimpleTest';
+import TestReservationForm from './pages/hotel/TestReservationForm';
+import TestConsumptionForm from './pages/hotel/TestConsumptionForm';
+import TestCheckinForm from './pages/hotel/TestCheckinForm';
+import HookStatusTest from './pages/hotel/HookStatusTest';
+import AuthTest from './pages/hotel/AuthTest';
+import FormTest from './pages/hotel/FormTest';
+import FeedbackTest from './pages/hotel/FeedbackTest';
 import HotelReports from "@/pages/HotelReports";
 import HotelNotifications from "@/pages/HotelNotifications";
 import Login from "@/pages/Login";
@@ -71,6 +80,15 @@ function AppContent() {
         {/* Rotas específicas de hotelaria */}
             <Route path="/hotel-dashboard" element={<HotelDashboardNew />} />
             <Route path="/hotel-rooms" element={<Rooms />} />
+            <Route path="/hotel-test-form" element={<TestRoomForm />} />
+              <Route path="/simple-test" element={<SimpleTest />} />
+            <Route path="/hotel-test-reservations" element={<TestReservationForm />} />
+          <Route path="/hotel-test-consumption" element={<TestConsumptionForm />} />
+          <Route path="/hotel-test-checkin" element={<TestCheckinForm />} />
+          <Route path="/hotel-hooks-status" element={<HookStatusTest />} />
+          <Route path="/auth-test" element={<AuthTest />} />
+              <Route path="/form-test" element={<FormTest />} />
+              <Route path="/feedback-test" element={<FeedbackTest />} />
             <Route path="/hotel-reservations" element={<Reservations />} />
             <Route path="/hotel-checkins" element={<Checkins />} />
             <Route path="/hotel-consumption" element={<Consumption />} />

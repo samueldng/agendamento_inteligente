@@ -3,6 +3,7 @@ import {
   createProfessional,
   getProfessionals,
   getProfessionalById,
+  getProfessionalByUserId,
   updateProfessional,
   deleteProfessional,
   getProfessionalAvailability
@@ -118,6 +119,7 @@ router.use(authenticateToken);
 // Rotas que requerem autenticação
 router.post('/', requireAdmin, validateBody(createProfessionalSchema), createProfessional);
 router.get('/', validateQuery(paginationSchema), getProfessionals);
+router.get('/by-user', getProfessionalByUserId);
 router.get('/:id', getProfessionalById);
 router.put('/:id', validateBody(updateProfessionalSchema), updateProfessional);
 router.get('/:id/availability', validateQuery(availabilitySchema), getProfessionalAvailability);

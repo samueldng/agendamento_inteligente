@@ -20,12 +20,16 @@ export default function Login() {
     setErrors({});
 
     try {
+      console.debug('🔐 [Login] Tentando fazer login com:', formData.email);
+      
       // Validate form data
       const validatedData = loginSchema.parse(formData);
       
       // Sign in
+      console.debug('🔐 [Login] Dados validados, chamando signIn...');
       await signIn(validatedData.email, validatedData.password);
       
+      console.debug('🔐 [Login] Login realizado com sucesso, navegando para dashboard...');
       // Navigate to dashboard
       navigate('/hotel/dashboard');
     } catch (error: any) {

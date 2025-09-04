@@ -23,15 +23,14 @@ export const resetPasswordSchema = z.object({
 // Hotel Room schemas
 export const hotelRoomSchema = z.object({
   room_number: z.string().min(1, 'Número do quarto é obrigatório'),
-  room_type: z.enum(['standard', 'deluxe', 'suite', 'presidential']),
-  floor: z.number().min(1, 'Andar deve ser maior que 0'),
+  room_type: z.enum(['single', 'double', 'suite', 'family'], {
+    errorMap: () => ({ message: 'Tipo de quarto inválido' }),
+  }),
   capacity: z.number().min(1, 'Capacidade deve ser maior que 0'),
   base_price: z.number().min(0, 'Preço base deve ser maior ou igual a 0'),
-  description: z.string().min(1, 'Descrição é obrigatória'),
+  description: z.string().optional(),
   amenities: z.array(z.string()).default([]),
-  professional_id: z.string().min(1, 'ID do profissional é obrigatório'),
   is_active: z.boolean().default(true),
-  images: z.array(z.string()).default([]),
   status: z.enum(['available', 'occupied', 'maintenance', 'cleaning']).optional()
 });
 

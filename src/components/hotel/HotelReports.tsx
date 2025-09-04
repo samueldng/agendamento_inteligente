@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, TrendingUp, Users, DollarSign, BarChart3, Download, Filter, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { toast } from 'sonner';
+import { supabase } from '../../lib/supabase';
 
 interface ReportData {
   occupancyRate: number;
@@ -44,16 +45,18 @@ const HotelReports: React.FC = () => {
   const loadReportData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        toast.error('Token de autenticação não encontrado');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Usuário não autenticado');
         return;
       }
 
+      const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
       // Buscar dados de reservas
-      const reservationsResponse = await fetch('/api/hotel-reservations', {
+      const reservationsResponse = await fetch(`${API_BASE_URL}/hotel-reservations`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -66,9 +69,9 @@ const HotelReports: React.FC = () => {
       const reservations = reservationsData.data || [];
 
       // Buscar dados de quartos
-      const roomsResponse = await fetch('/api/hotel-rooms', {
+      const roomsResponse = await fetch(`${API_BASE_URL}/hotel-rooms`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -81,9 +84,9 @@ const HotelReports: React.FC = () => {
       const rooms = roomsData.data || [];
 
       // Buscar dados de consumo
-      const consumptionResponse = await fetch('/api/hotel-consumption', {
+      const consumptionResponse = await fetch(`${API_BASE_URL}/hotel-consumption`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });

@@ -3,22 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
 import HotelRoomList from '../components/HotelRoomList';
 import Layout from '../components/Layout';
-import { useAuthStore } from '../stores/authStore';
+import { supabase } from '../lib/supabase';
 
 export default function HotelRooms() {
-  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [professionalId, setProfessionalId] = useState<string>('');
 
   useEffect(() => {
     const loadProfessionalData = async () => {
-      if (!user?.id) return;
-
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/professionals?user_id=${user.id}`, {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token || !session?.user?.id) {
+          return;
+        }
+
+        const response = await fetch(`/api/professionals?user_id=${session.user.id}`, {
           headers: {
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${session.access_token}`
           }
         });
 
@@ -36,7 +37,7 @@ export default function HotelRooms() {
     };
 
     loadProfessionalData();
-  }, [user?.id]);
+  }, []);
 
   if (loading) {
     return (

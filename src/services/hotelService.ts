@@ -27,13 +27,22 @@ export const hotelRoomsService = {
   },
 
   async create(room: Database['public']['Tables']['hotel_rooms']['Insert']) {
+    console.log('🏨 hotelService - create chamado com dados:', room);
+    
     const { data, error } = await supabase
       .from('hotel_rooms')
       .insert(room)
       .select()
       .single()
     
-    if (error) throw error
+    console.log('🏨 hotelService - Resposta do Supabase:', { data, error });
+    
+    if (error) {
+      console.error('❌ hotelService - Erro do Supabase:', error);
+      throw error;
+    }
+    
+    console.log('🏨 hotelService - Quarto criado com sucesso:', data);
     return data as HotelRoom
   },
 

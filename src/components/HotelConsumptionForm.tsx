@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Plus, Minus, Trash2, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { consumptionApi } from '../lib/api/hotel';
 import { hotelConsumptionSchema, type HotelConsumption } from '../lib/validations/hotel';
 import { toast } from 'sonner';
 import { useFormSubmission, useDataFetching } from '../hooks/useAsyncOperation';
-import { LoadingSpinner } from './ui/LoadingSpinner';
+import LoadingSpinner from './LoadingSpinner';
 import { ErrorDisplay } from './ui/ErrorDisplay';
 
 interface ConsumptionItem {
@@ -170,7 +170,7 @@ export default function HotelConsumptionForm({
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
           >
-            <Trash2 className="w-6 h-6" />
+            <X className="w-6 h-6" />
           </button>
         </div>
         
@@ -327,7 +327,7 @@ export default function HotelConsumptionForm({
                     disabled={isSubmitting}
                     className="w-full flex items-center gap-2"
                   >
-                    {isSubmitting && <ButtonSpinner size="xs" />}
+                    {isSubmitting && <LoadingSpinner />}
                     Registrar Consumo
                   </Button>
                   <Button

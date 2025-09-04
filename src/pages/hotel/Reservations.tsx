@@ -187,11 +187,9 @@ export function Reservations() {
             Atualizar
           </Button>
           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Nova Reserva
-              </Button>
+            <DialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Reserva
             </DialogTrigger>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -389,10 +387,8 @@ export function Reservations() {
                         <div className="flex space-x-2">
                           {reservation.status === 'confirmed' && (
                             <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="text-orange-600 hover:text-orange-700">
-                                  Cancelar
-                                </Button>
+                              <AlertDialogTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-orange-600 hover:text-orange-700">
+                                Cancelar
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -417,15 +413,12 @@ export function Reservations() {
                           <Dialog open={editingReservation?.id === reservation.id} onOpenChange={(open) => {
                             if (!open) setEditingReservation(null);
                           }}>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingReservation(reservation)}
-                              >
-                                <Edit className="mr-1 h-4 w-4" />
-                                Editar
-                              </Button>
+                            <DialogTrigger 
+                              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                              onClick={() => setEditingReservation(reservation)}
+                            >
+                              <Edit className="mr-1 h-4 w-4" />
+                              Editar
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
@@ -442,15 +435,11 @@ export function Reservations() {
                           <AlertDialog open={deletingReservation?.id === reservation.id} onOpenChange={(open) => {
                             if (!open) setDeletingReservation(null);
                           }}>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => setDeletingReservation(reservation)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                            <AlertDialogTrigger 
+                              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-red-600 hover:text-red-700"
+                              onClick={() => setDeletingReservation(reservation)}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>

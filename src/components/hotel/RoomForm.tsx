@@ -40,16 +40,13 @@ export function RoomForm({ room, onSubmit, onCancel, loading = false }: RoomForm
     resolver: zodResolver(hotelRoomSchema),
     defaultValues: {
       room_number: room?.room_number || '',
-      room_type: room?.room_type || 'standard',
+      room_type: room?.room_type || 'single',
       status: room?.status || 'available',
-      floor: room?.floor || 1,
       capacity: room?.capacity || 1,
       base_price: room?.base_price || 0,
       description: room?.description || '',
       amenities: room?.amenities || [],
-      professional_id: room?.professional_id || '',
       is_active: room?.is_active ?? true,
-      images: room?.images || [],
     },
   });
 
@@ -58,12 +55,22 @@ export function RoomForm({ room, onSubmit, onCancel, loading = false }: RoomForm
 
   const handleFormSubmit = async (data: HotelRoomFormData) => {
     try {
+      console.log('📝 [RoomForm] Iniciando submissão do formulário');
+      console.log('📝 [RoomForm] Dados do formulário:', data);
       setIsSubmitting(true);
-      // Remove o campo status antes de enviar (é calculado automaticamente)
+      
       const { status, ...roomData } = data;
+
+      console.log('🏨 Enviando dados do quarto:', roomData);
+      console.log('✅ [RoomForm] Validação passou, enviando dados...');
+
       await onSubmit(roomData);
+      
+      console.log('✅ [RoomForm] Quarto salvo com sucesso!');
+      onCancel();
     } catch (error) {
-      console.error('Erro ao salvar quarto:', error);
+      console.error('❌ [RoomForm] Erro ao salvar quarto:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -98,7 +105,15 @@ export function RoomForm({ room, onSubmit, onCancel, loading = false }: RoomForm
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit((data) => {
+          console.log('🔥 TESTE: Form onSubmit executado!');
+          return handleFormSubmit(data);
+        })} className="space-y-6">
+          {/* Debug info */}
+          <div className="hidden">
+            {console.log('🏨 RoomForm - Renderizando formulário, errors:', errors)}
+            {console.log('🏨 RoomForm - Form valid:', Object.keys(errors).length === 0)}
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Room Number */}
             <div className="space-y-2">
@@ -114,21 +129,6 @@ export function RoomForm({ room, onSubmit, onCancel, loading = false }: RoomForm
               )}
             </div>
 
-            {/* Floor */}
-            <div className="space-y-2">
-              <Label htmlFor="floor">Andar *</Label>
-              <Input
-                id="floor"
-                type="number"
-                min="1"
-                {...register('floor', { valueAsNumber: true })}
-                className={errors.floor ? 'border-red-500' : ''}
-              />
-              {errors.floor && (
-                <p className="text-sm text-red-500">{errors.floor.message}</p>
-              )}
-            </div>
-
             {/* Room Type */}
             <div className="space-y-2">
               <Label htmlFor="room_type">Tipo do Quarto *</Label>
@@ -140,10 +140,10 @@ export function RoomForm({ room, onSubmit, onCancel, loading = false }: RoomForm
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="standard">Standard</SelectItem>
-                  <SelectItem value="deluxe">Deluxe</SelectItem>
+                  <SelectItem value="single">Solteiro</SelectItem>
+                  <SelectItem value="double">Casal</SelectItem>
                   <SelectItem value="suite">Suíte</SelectItem>
-                  <SelectItem value="presidential">Presidencial</SelectItem>
+                  <SelectItem value="family">Família</SelectItem>
                 </SelectContent>
               </Select>
               {errors.room_type && (

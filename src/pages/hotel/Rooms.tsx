@@ -24,6 +24,8 @@ export function Rooms() {
   const [editingRoom, setEditingRoom] = useState<HotelRoom | null>(null);
   const [deletingRoom, setDeletingRoom] = useState<HotelRoom | null>(null);
 
+  console.log('🔥 TESTE: Componente Rooms renderizado, isFormOpen:', isFormOpen);
+
   const {
     rooms: baseRooms,
     loading,
@@ -160,10 +162,27 @@ export function Rooms() {
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Atualizar
           </Button>
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          
+          {/* Botão de teste direto */}
+          <Button 
+            onClick={() => {
+              console.log('🔥 TESTE: Botão teste clicado, forçando abertura do modal');
+              setIsFormOpen(true);
+            }}
+            variant="outline"
+          >
+            TESTE MODAL
+          </Button>
+          
+          <Dialog open={isFormOpen} onOpenChange={(open) => {
+            console.log('🔥 TESTE: Dialog onOpenChange chamado, open:', open);
+            setIsFormOpen(open);
+          }}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
+                console.log('🔥 TESTE: Botão Novo Quarto clicado!');
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
                 Novo Quarto
               </Button>
             </DialogTrigger>
@@ -173,7 +192,11 @@ export function Rooms() {
               </DialogHeader>
               <RoomForm
                 onSubmit={handleCreateRoom}
-                onCancel={() => setIsFormOpen(false)}
+                onCancel={() => {
+                  console.log('🔥 TESTE: Cancelar formulário clicado!');
+                  setIsFormOpen(false);
+                }}
+                loading={loading}
               />
             </DialogContent>
           </Dialog>
@@ -334,16 +357,12 @@ export function Rooms() {
                         <Dialog open={editingRoom?.id === room.id} onOpenChange={(open) => {
                           if (!open) setEditingRoom(null);
                         }}>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => setEditingRoom(room)}
-                            >
-                              <Edit className="mr-1 h-4 w-4" />
-                              Editar
-                            </Button>
+                          <DialogTrigger
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 flex-1"
+                            onClick={() => setEditingRoom(room)}
+                          >
+                            <Edit className="mr-1 h-4 w-4" />
+                            Editar
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
@@ -360,15 +379,11 @@ export function Rooms() {
                         <AlertDialog open={deletingRoom?.id === room.id} onOpenChange={(open) => {
                           if (!open) setDeletingRoom(null);
                         }}>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700"
-                              onClick={() => setDeletingRoom(room)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <AlertDialogTrigger
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3 text-red-600 hover:text-red-700"
+                            onClick={() => setDeletingRoom(room)}
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>

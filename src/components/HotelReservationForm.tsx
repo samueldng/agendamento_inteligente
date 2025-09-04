@@ -3,15 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Calendar, Users, Mail, Phone, DollarSign, User, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
-import { Modal } from './ui/Modal';
-import { Button } from './ui/Button';
+import Modal from './Modal';
+import { Button } from './ui/button';
 import { FormField } from './ui/FormField';
-import { LoadingSpinner } from './ui/LoadingSpinner';
-import { ErrorDisplay } from './ui/ErrorDisplay';
+import LoadingSpinner from './LoadingSpinner';
+import { ErrorDisplay } from './ErrorBoundary';
 import { ButtonSpinner } from './ui/ButtonSpinner';
-import { useFormSubmission } from '../hooks/useFormSubmission';
-import { useDataFetching } from '../hooks/useDataFetching';
-import { roomsApi, reservationsApi } from '../lib/api';
+import { useFormSubmission, useDataFetching } from '../hooks/useAsyncOperation';
+import { roomsApi, reservationsApi } from '../lib/api/hotel';
 import { hotelReservationSchema, type HotelReservationFormData } from '../lib/validations/hotel';
 import type { HotelReservation, HotelRoom } from '../types/hotel';
 
@@ -144,6 +143,10 @@ export default function HotelReservationForm({
 
 
   const onSubmitForm = async (data: HotelReservationFormData) => {
+    console.log('🏨 HotelReservationForm onSubmitForm called with data:', data);
+    console.log('🏨 Professional ID:', professionalId);
+    console.log('🏨 Reservation (editing):', reservation);
+    
     try {
       const reservationData = {
         ...data,
@@ -151,19 +154,25 @@ export default function HotelReservationForm({
         check_out_date: data.check_out_date + 'T12:00:00.000Z'
       };
       
+      console.log('🏨 Reservation data to be sent:', reservationData);
+      
       let result;
       if (reservation) {
+        console.log('🏨 Updating reservation with ID:', reservation.id);
         result = await reservationsApi.update(reservation.id!, reservationData);
+        console.log('🏨 Reservation updated successfully');
         toast.success('Reserva atualizada com sucesso!');
       } else {
+        console.log('🏨 Creating new reservation');
         result = await reservationsApi.create(reservationData);
+        console.log('🏨 Reservation created successfully');
         toast.success('Reserva criada com sucesso!');
       }
       
       onSubmit(result);
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar reserva:', error);
+      console.error('🏨 Erro ao salvar reserva:', error);
       toast.error('Erro ao salvar reserva');
     }
   };

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Users, CreditCard, Phone, Mail, Edit, Trash2, Eye, Plus, Filter, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from './ui/Button';
-import { LoadingSpinner } from './ui/LoadingSpinner';
+import { Button } from './ui/button';
+import LoadingSpinner from './LoadingSpinner';
 import { Empty } from './ui/Empty';
 import HotelReservationForm from './HotelReservationForm';
 import { reservationsApi } from '../lib/api/hotel';
