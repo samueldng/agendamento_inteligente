@@ -37,6 +37,11 @@ app.get('/', (req, res) => {
   res.json({ status: 'online', message: 'Bem-vindo à API do Hora Marcada!', version: '0.1.3' });
 });
 
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
