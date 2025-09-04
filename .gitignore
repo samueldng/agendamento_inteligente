@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .vite
 .vercel
+
+# Local Netlify folder
+.netlify
