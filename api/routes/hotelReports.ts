@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middleware/auth.js';
-import { validateProfessionalId } from '../middleware/validation.js';
-import { getHotelReports } from '../controllers/hotelReports.js';
+import { authenticateToken } from '../middleware/auth';
+import { validateProfessionalId } from '../middleware/validation';
+import { getHotelReports } from '../controllers/hotelReports';
 
 const router = Router();
 

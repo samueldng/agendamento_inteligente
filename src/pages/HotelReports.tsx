@@ -60,7 +60,7 @@ export default function HotelReports() {
         return;
       }
 
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+      const apiUrl = import.meta.env.VITE_API_URL || 'https://agendamento-backend.onrender.com/api';
       
       // Calcular datas baseadas no período selecionado
       let startDate: Date;

@@ -1,6 +1,6 @@
-import { Response } from 'express';
-import { supabaseAdmin } from '../config/supabase.js';
-import { AuthRequest, ApiResponse } from '../types/auth.js';
+import { Request, Response } from 'express';
+import { supabaseAdmin } from '../config/supabase';
+import { AuthRequest, ApiResponse } from '../types/auth';
 
 // Obter relatórios detalhados do hotel
 export const getHotelReports = async (req: AuthRequest, res: Response) => {
