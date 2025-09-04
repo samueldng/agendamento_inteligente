@@ -10,8 +10,15 @@ import professionalsRoutes from './routes/professionals';
 import servicesRoutes from './routes/services';
 import clientsRoutes from './routes/clients';
 import appointmentsRoutes from './routes/appointments';
+import categoriesRoutes from './routes/categories';
 import webhookRoutes from './routes/webhook';
-import { notificationService } from './services/notifications';
+import hotelRoomsRoutes from './routes/hotelRooms';
+import hotelReservationsRoutes from './routes/hotelReservations';
+import hotelCheckinsRoutes from './routes/hotelCheckins';
+import hotelConsumptionRoutes from './routes/hotelConsumption';
+import hotelNotificationsRoutes from './hotel/notifications';
+import { initializeNotificationService } from './services/notificationService';
+import notificationService from './services/notificationService';
 
 const app = express();
 
@@ -30,10 +37,29 @@ app.use('/api/professionals', professionalsRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/clients', clientsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
+app.use('/api/categories', categoriesRoutes);
 app.use('/api/webhook', webhookRoutes);
+app.use('/api/hotel-rooms', hotelRoomsRoutes);
+app.use('/api/hotel-reservations', hotelReservationsRoutes);
+app.use('/api/hotel-checkins', hotelCheckinsRoutes);
+app.use('/api/hotel-consumption', hotelConsumptionRoutes);
+app.use('/api/hotel/notifications', hotelNotificationsRoutes);
 
 // Inicializar serviço de notificações
-notificationService.start();
+initializeNotificationService();
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Recebido SIGTERM, parando serviços...');
+  notificationService.stop();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('Recebido SIGINT, parando serviços...');
+  notificationService.stop();
+  process.exit(0);
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

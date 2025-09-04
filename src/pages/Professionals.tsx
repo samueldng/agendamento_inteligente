@@ -11,73 +11,23 @@ import {
   X,
   User,
   Calendar,
-  MapPin
+  MapPin,
+  Tag
 } from 'lucide-react';
-
-interface WorkingHours {
-  day: string;
-  enabled: boolean;
-  start_time: string;
-  end_time: string;
-  break_start?: string;
-  break_end?: string;
-}
-
-interface Professional {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  specialty: string;
-  registration: string;
-  address?: string;
-  bio?: string;
-  active: boolean;
-  working_hours: WorkingHours[];
-  services: string[];
-  created_at: string;
-  updated_at: string;
-}
+import { Professional, BusinessCategory, DynamicFormData, WorkingHours } from '../../api/types';
+import { useCategories, useCategoryById, createProfessional, updateProfessional, fetchProfessionals, deleteProfessional } from '../hooks/useCategories';
+import DynamicFields from '../components/DynamicFields';
 
 interface ProfessionalFormData {
   name: string;
   email: string;
   phone: string;
-  specialty: string;
-  registration: string;
-  address: string;
-  bio: string;
-  active: boolean;
-  working_hours: WorkingHours[];
-  services: string[];
+  category_id: string;
+  working_hours: WorkingHours;
+  dynamic_fields: DynamicFormData;
 }
 
-const SPECIALTIES = [
-  'Clínico Geral',
-  'Cardiologista',
-  'Dermatologista',
-  'Neurologista',
-  'Ortopedista',
-  'Pediatra',
-  'Ginecologista',
-  'Psiquiatra',
-  'Fisioterapeuta',
-  'Nutricionista',
-  'Psicólogo',
-  'Dentista',
-  'Outros'
-];
-
-const SERVICES = [
-  'Consulta Médica',
-  'Exame de Sangue',
-  'Fisioterapia',
-  'Ultrassom',
-  'Eletrocardiograma',
-  'Raio-X',
-  'Consulta Nutricional',
-  'Terapia'
-];
+// Removidas as constantes fixas de especialidades e serviços
 
 const DAYS_OF_WEEK = [
   { key: 'monday', label: 'Segunda-feira' },
@@ -89,52 +39,22 @@ const DAYS_OF_WEEK = [
   { key: 'sunday', label: 'Domingo' }
 ];
 
-const DEFAULT_WORKING_HOURS: WorkingHours[] = DAYS_OF_WEEK.map(day => ({
-  day: day.key,
-  enabled: day.key !== 'sunday',
-  start_time: '08:00',
-  end_time: '18:00',
-  break_start: '12:00',
-  break_end: '13:00'
-}));
+const DEFAULT_WORKING_HOURS: WorkingHours = {
+  monday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  tuesday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  wednesday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  thursday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  friday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  saturday: { is_working: true, start_time: '08:00', end_time: '18:00', break_start: '12:00', break_end: '13:00' },
+  sunday: { is_working: false }
+};
 
-const MOCK_PROFESSIONALS: Professional[] = [
-  {
-    id: '1',
-    name: 'Dr. João Silva',
-    email: 'joao.silva@email.com',
-    phone: '(11) 99999-9999',
-    specialty: 'Clínico Geral',
-    registration: 'CRM 123456',
-    address: 'Rua das Flores, 123 - São Paulo/SP',
-    bio: 'Médico com 15 anos de experiência em clínica geral.',
-    active: true,
-    working_hours: DEFAULT_WORKING_HOURS,
-    services: ['Consulta Médica', 'Eletrocardiograma'],
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z'
-  },
-  {
-    id: '2',
-    name: 'Dra. Maria Santos',
-    email: 'maria.santos@email.com',
-    phone: '(11) 88888-8888',
-    specialty: 'Cardiologista',
-    registration: 'CRM 654321',
-    address: 'Av. Paulista, 456 - São Paulo/SP',
-    bio: 'Especialista em cardiologia com foco em prevenção.',
-    active: true,
-    working_hours: DEFAULT_WORKING_HOURS,
-    services: ['Consulta Médica', 'Eletrocardiograma', 'Ultrassom'],
-    created_at: '2024-01-15T10:00:00Z',
-    updated_at: '2024-01-15T10:00:00Z'
-  }
-];
+// Dados mock removidos - agora vem da API
 
 export default function Professionals() {
-  const [professionals, setProfessionals] = useState<Professional[]>(MOCK_PROFESSIONALS);
+  const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProfessional, setEditingProfessional] = useState<Professional | null>(null);
@@ -142,30 +62,50 @@ export default function Professionals() {
     name: '',
     email: '',
     phone: '',
-    specialty: 'Clínico Geral',
-    registration: '',
-    address: '',
-    bio: '',
-    active: true,
+    category_id: '',
     working_hours: DEFAULT_WORKING_HOURS,
-    services: []
+    dynamic_fields: {}
   });
-  const [errors, setErrors] = useState<Partial<ProfessionalFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'schedule' | 'services'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'schedule' | 'dynamic'>('basic');
+  const [dynamicFieldErrors, setDynamicFieldErrors] = useState<Record<string, string>>({});
+  
+  // Hooks para categorias
+  const { data: categories, loading: categoriesLoading } = useCategories();
+  const { data: selectedCategoryData } = useCategoryById(formData.category_id || null);
 
   const filteredProfessionals = professionals.filter(professional => {
     const matchesSearch = professional.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          professional.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         professional.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = selectedSpecialty === 'all' || professional.specialty === selectedSpecialty;
-    const matchesActive = !showActiveOnly || professional.active;
+                         professional.phone.includes(searchTerm);
     
-    return matchesSearch && matchesSpecialty && matchesActive;
+    const matchesCategory = selectedCategory === 'all' || professional.category_id === selectedCategory;
+    const matchesStatus = !showActiveOnly || professional.is_active;
+    
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  // Carregar profissionais ao montar o componente
+  useEffect(() => {
+    loadProfessionals();
+  }, []);
+
+  const loadProfessionals = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchProfessionals();
+      setProfessionals(data);
+    } catch (error) {
+      console.error('Erro ao carregar profissionais:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const validateForm = (): boolean => {
-    const newErrors: Partial<ProfessionalFormData> = {};
+    const newErrors: Record<string, string> = {};
+    const newDynamicErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Nome é obrigatório';
@@ -181,12 +121,25 @@ export default function Professionals() {
       newErrors.phone = 'Telefone é obrigatório';
     }
 
-    if (!formData.registration.trim()) {
-      newErrors.registration = 'Registro profissional é obrigatório';
+    if (!formData.category_id.trim()) {
+      newErrors.category_id = 'Categoria é obrigatória';
+    }
+
+    // Validar campos dinâmicos obrigatórios
+    if (selectedCategoryData?.fields_config) {
+      selectedCategoryData.fields_config.forEach(field => {
+        if (field.required) {
+          const value = formData.dynamic_fields[field.name];
+          if (!value || (typeof value === 'string' && !value.trim())) {
+            newDynamicErrors[field.name] = `${field.label} é obrigatório`;
+          }
+        }
+      });
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setDynamicFieldErrors(newDynamicErrors);
+    return Object.keys(newErrors).length === 0 && Object.keys(newDynamicErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,28 +150,30 @@ export default function Professionals() {
     setLoading(true);
     
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       if (editingProfessional) {
         // Atualizar profissional existente
-        const updatedProfessionals = professionals.map(professional => 
-          professional.id === editingProfessional.id 
-            ? { ...professional, ...formData, updated_at: new Date().toISOString() }
-            : professional
-        );
-        setProfessionals(updatedProfessionals);
+        await updateProfessional(editingProfessional.id, {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          category_id: formData.category_id,
+          working_hours: formData.working_hours,
+          dynamic_fields: formData.dynamic_fields
+        });
       } else {
         // Criar novo profissional
-        const newProfessional: Professional = {
-          id: Date.now().toString(),
-          ...formData,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        };
-        setProfessionals([...professionals, newProfessional]);
+        await createProfessional({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          category_id: formData.category_id,
+          working_hours: formData.working_hours,
+          dynamic_fields: formData.dynamic_fields
+        });
       }
       
+      // Recarregar lista de profissionais
+      await loadProfessionals();
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar profissional:', error);
@@ -233,13 +188,9 @@ export default function Professionals() {
       name: professional.name,
       email: professional.email,
       phone: professional.phone,
-      specialty: professional.specialty,
-      registration: professional.registration,
-      address: professional.address || '',
-      bio: professional.bio || '',
-      active: professional.active,
+      category_id: professional.category_id,
       working_hours: professional.working_hours,
-      services: professional.services
+      dynamic_fields: professional.dynamic_fields || {}
     });
     setShowModal(true);
   };
@@ -249,9 +200,8 @@ export default function Professionals() {
     
     setLoading(true);
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setProfessionals(professionals.filter(professional => professional.id !== professionalId));
+      await deleteProfessional(professionalId);
+      await loadProfessionals();
     } catch (error) {
       console.error('Erro ao excluir profissional:', error);
     } finally {
@@ -262,14 +212,19 @@ export default function Professionals() {
   const handleToggleActive = async (professionalId: string) => {
     setLoading(true);
     try {
-      // Simular API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const updatedProfessionals = professionals.map(professional => 
-        professional.id === professionalId 
-          ? { ...professional, active: !professional.active, updated_at: new Date().toISOString() }
-          : professional
-      );
-      setProfessionals(updatedProfessionals);
+      const professional = professionals.find(p => p.id === professionalId);
+      if (professional) {
+        await updateProfessional(professionalId, {
+          name: professional.name,
+          email: professional.email,
+          phone: professional.phone,
+          category_id: professional.category_id,
+          working_hours: professional.working_hours,
+          dynamic_fields: professional.dynamic_fields || {},
+          is_active: !professional.is_active
+        });
+        await loadProfessionals();
+      }
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
     } finally {
@@ -284,29 +239,24 @@ export default function Professionals() {
       name: '',
       email: '',
       phone: '',
-      specialty: 'Clínico Geral',
-      registration: '',
-      address: '',
-      bio: '',
-      active: true,
+      category_id: '',
       working_hours: DEFAULT_WORKING_HOURS,
-      services: []
+      dynamic_fields: {}
     });
     setErrors({});
+    setDynamicFieldErrors({});
     setActiveTab('basic');
   };
 
-  const updateWorkingHours = (dayIndex: number, field: keyof WorkingHours, value: string | boolean) => {
-    const updatedHours = [...formData.working_hours];
-    updatedHours[dayIndex] = { ...updatedHours[dayIndex], [field]: value };
+  const updateWorkingHours = (dayKey: keyof WorkingHours, field: string, value: string | boolean) => {
+    const updatedHours = {
+      ...formData.working_hours,
+      [dayKey]: {
+        ...formData.working_hours[dayKey],
+        [field]: value
+      }
+    };
     setFormData({ ...formData, working_hours: updatedHours });
-  };
-
-  const toggleService = (service: string) => {
-    const updatedServices = formData.services.includes(service)
-      ? formData.services.filter(s => s !== service)
-      : [...formData.services, service];
-    setFormData({ ...formData, services: updatedServices });
   };
 
   const getStatusBadge = (active: boolean) => {
@@ -350,16 +300,17 @@ export default function Professionals() {
             />
           </div>
 
-          {/* Filtro por especialidade */}
+          {/* Filtro por categoria */}
           <select
-            value={selectedSpecialty}
-            onChange={(e) => setSelectedSpecialty(e.target.value)}
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            disabled={categoriesLoading}
           >
-            <option value="all">Todas as especialidades</option>
-            {SPECIALTIES.map(specialty => (
-              <option key={specialty} value={specialty}>
-                {specialty}
+            <option value="all">Todas as categorias</option>
+            {categories?.map(category => (
+              <option key={category.id} value={category.id}>
+                {category.name}
               </option>
             ))}
           </select>
@@ -387,13 +338,13 @@ export default function Professionals() {
                   Profissional
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Especialidade
+                  Categoria
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Contato
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Registro
+                  Campos Específicos
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -419,15 +370,18 @@ export default function Professionals() {
                             {professional.name}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {professional.services.length} serviços
+                            ID: {professional.id}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {professional.specialty}
-                      </span>
+                      <div className="flex items-center">
+                        <Tag className="w-4 h-4 mr-2 text-gray-400" />
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {professional.category?.name || 'Sem categoria'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
@@ -442,10 +396,32 @@ export default function Professionals() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {professional.registration}
+                      {professional.category?.fields_config ? (
+                        <div className="space-y-1">
+                          {Object.entries(professional.dynamic_fields || {}).slice(0, 2).map(([key, value]) => {
+                            const fieldConfig = professional.category.fields_config.find(f => f.name === key);
+                            if (!fieldConfig || !value) return null;
+                            return (
+                              <div key={key} className="flex items-center text-xs">
+                                <span className="font-medium text-gray-600 mr-1">
+                                  {fieldConfig.label}:
+                                </span>
+                                <span className="text-gray-900">
+                                  {String(value).length > 20 ? `${String(value).substring(0, 20)}...` : String(value)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                          {Object.keys(professional.dynamic_fields || {}).length > 2 && (
+                            <span className="text-xs text-gray-500">+{Object.keys(professional.dynamic_fields || {}).length - 2} mais</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs">Sem campos específicos</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(professional.active)}
+                      {getStatusBadge(professional.is_active)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
@@ -459,11 +435,11 @@ export default function Professionals() {
                         <button
                           onClick={() => handleToggleActive(professional.id)}
                           className={`p-1 ${
-                            professional.active 
+                            professional.is_active 
                               ? 'text-red-600 hover:text-red-900' 
                               : 'text-green-600 hover:text-green-900'
                           }`}
-                          title={professional.active ? 'Desativar' : 'Ativar'}
+                          title={professional.is_active ? 'Desativar' : 'Ativar'}
                         >
                           <Calendar className="w-4 h-4" />
                         </button>
@@ -530,14 +506,14 @@ export default function Professionals() {
                   Horários
                 </button>
                 <button
-                  onClick={() => setActiveTab('services')}
+                  onClick={() => setActiveTab('dynamic')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'services'
+                    activeTab === 'dynamic'
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >
-                  Serviços
+                  Campos Específicos
                 </button>
               </nav>
             </div>
@@ -604,83 +580,31 @@ export default function Professionals() {
                       )}
                     </div>
 
-                    {/* Especialidade */}
+                    {/* Categoria */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Especialidade *
+                        Categoria *
                       </label>
                       <select
-                        value={formData.specialty}
-                        onChange={(e) => setFormData({ ...formData, specialty: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                        value={formData.category_id}
+                        onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${
+                          errors.category_id ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                        disabled={categoriesLoading}
                       >
-                        {SPECIALTIES.map(specialty => (
-                          <option key={specialty} value={specialty}>
-                            {specialty}
+                        <option value="">Selecione uma categoria</option>
+                        {categories?.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
                           </option>
                         ))}
                       </select>
-                    </div>
-
-                    {/* Registro */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Registro Profissional *
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.registration}
-                        onChange={(e) => setFormData({ ...formData, registration: e.target.value })}
-                        className={`w-full px-3 py-2 border rounded-md text-sm ${
-                          errors.registration ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                        placeholder="CRM 123456"
-                      />
-                      {errors.registration && (
-                        <p className="mt-1 text-sm text-red-600">{errors.registration}</p>
+                      {errors.category_id && (
+                        <p className="mt-1 text-sm text-red-600">{errors.category_id}</p>
                       )}
                     </div>
 
-                    {/* Status */}
-                    <div className="flex items-center">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.active}
-                          onChange={(e) => setFormData({ ...formData, active: e.target.checked })}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">Profissional ativo</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Endereço */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Endereço
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.address}
-                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      placeholder="Rua, número, bairro, cidade/estado"
-                    />
-                  </div>
-
-                  {/* Bio */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Biografia
-                    </label>
-                    <textarea
-                      value={formData.bio}
-                      onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      placeholder="Breve descrição sobre o profissional..."
-                    />
                   </div>
                 </div>
               )}
@@ -689,23 +613,23 @@ export default function Professionals() {
               {activeTab === 'schedule' && (
                 <div className="space-y-4">
                   <h4 className="text-md font-medium text-gray-900">Horários de Trabalho</h4>
-                  {DAYS_OF_WEEK.map((day, index) => {
-                    const workingHour = formData.working_hours[index];
+                  {DAYS_OF_WEEK.map((day) => {
+                    const workingHour = formData.working_hours[day.key as keyof WorkingHours];
                     return (
                       <div key={day.key} className="border border-gray-200 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-3">
                           <label className="flex items-center space-x-2">
                             <input
                               type="checkbox"
-                              checked={workingHour.enabled}
-                              onChange={(e) => updateWorkingHours(index, 'enabled', e.target.checked)}
+                              checked={workingHour.is_working}
+                              onChange={(e) => updateWorkingHours(day.key as keyof WorkingHours, 'is_working', e.target.checked)}
                               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                             />
                             <span className="text-sm font-medium text-gray-700">{day.label}</span>
                           </label>
                         </div>
                         
-                        {workingHour.enabled && (
+                        {workingHour.is_working && (
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div>
                               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -714,7 +638,7 @@ export default function Professionals() {
                               <input
                                 type="time"
                                 value={workingHour.start_time}
-                                onChange={(e) => updateWorkingHours(index, 'start_time', e.target.value)}
+                                onChange={(e) => updateWorkingHours(day.key as keyof WorkingHours, 'start_time', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </div>
@@ -725,7 +649,7 @@ export default function Professionals() {
                               <input
                                 type="time"
                                 value={workingHour.end_time}
-                                onChange={(e) => updateWorkingHours(index, 'end_time', e.target.value)}
+                                onChange={(e) => updateWorkingHours(day.key as keyof WorkingHours, 'end_time', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </div>
@@ -736,7 +660,7 @@ export default function Professionals() {
                               <input
                                 type="time"
                                 value={workingHour.break_start || ''}
-                                onChange={(e) => updateWorkingHours(index, 'break_start', e.target.value)}
+                                onChange={(e) => updateWorkingHours(day.key as keyof WorkingHours, 'break_start', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </div>
@@ -747,7 +671,7 @@ export default function Professionals() {
                               <input
                                 type="time"
                                 value={workingHour.break_end || ''}
-                                onChange={(e) => updateWorkingHours(index, 'break_end', e.target.value)}
+                                onChange={(e) => updateWorkingHours(day.key as keyof WorkingHours, 'break_end', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                               />
                             </div>
@@ -759,23 +683,22 @@ export default function Professionals() {
                 </div>
               )}
 
-              {/* Tab: Serviços */}
-              {activeTab === 'services' && (
+              {/* Tab: Campos Dinâmicos */}
+              {activeTab === 'dynamic' && (
                 <div className="space-y-4">
-                  <h4 className="text-md font-medium text-gray-900">Serviços Oferecidos</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {SERVICES.map(service => (
-                      <label key={service} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.services.includes(service)}
-                          onChange={() => toggleService(service)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">{service}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <h4 className="text-md font-medium text-gray-900">Campos Específicos da Categoria</h4>
+                  {selectedCategoryData?.fields_config ? (
+                    <DynamicFields
+                      fields={selectedCategoryData.fields_config}
+                      values={formData.dynamic_fields}
+                      onChange={(values) => setFormData({ ...formData, dynamic_fields: values })}
+                      errors={dynamicFieldErrors}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      {formData.category_id ? 'Esta categoria não possui campos específicos.' : 'Selecione uma categoria para ver os campos específicos.'}
+                    </p>
+                  )}
                 </div>
               )}
 

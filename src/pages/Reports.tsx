@@ -69,18 +69,18 @@ const MOCK_WEEKLY_DATA: ReportData[] = [
 ];
 
 const MOCK_SERVICE_DATA: ServiceReport[] = [
-  { name: 'Consulta Médica', appointments: 45, revenue: 6750, percentage: 35 },
-  { name: 'Exame de Sangue', appointments: 32, revenue: 2560, percentage: 25 },
-  { name: 'Ultrassom', appointments: 28, revenue: 4200, percentage: 22 },
-  { name: 'Raio-X', appointments: 15, revenue: 1200, percentage: 12 },
+  { name: 'Corte de Cabelo', appointments: 45, revenue: 6750, percentage: 35 },
+  { name: 'Manicure', appointments: 32, revenue: 2560, percentage: 25 },
+  { name: 'Pedicure', appointments: 28, revenue: 4200, percentage: 22 },
+  { name: 'Escova', appointments: 15, revenue: 1200, percentage: 12 },
   { name: 'Outros', appointments: 8, revenue: 640, percentage: 6 }
 ];
 
 const MOCK_PROFESSIONAL_DATA: ProfessionalReport[] = [
-  { name: 'Dr. João Silva', appointments: 42, revenue: 6300, rating: 4.8 },
-  { name: 'Dra. Maria Santos', appointments: 38, revenue: 5700, rating: 4.9 },
-  { name: 'Dr. Carlos Lima', appointments: 35, revenue: 5250, rating: 4.7 },
-  { name: 'Dra. Ana Costa', appointments: 13, revenue: 1950, rating: 4.6 }
+  { name: 'João Silva', appointments: 42, revenue: 6300, rating: 4.8 },
+  { name: 'Maria Santos', appointments: 38, revenue: 5700, rating: 4.9 },
+  { name: 'Carlos Lima', appointments: 35, revenue: 5250, rating: 4.7 },
+  { name: 'Ana Costa', appointments: 13, revenue: 1950, rating: 4.6 }
 ];
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];

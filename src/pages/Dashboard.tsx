@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import MetricCard from '../components/MetricCard';
+import CategoryInsights from '../components/CategoryInsights';
 import { useDashboardStats, AppointmentStats, TodayAppointment, RecentClient } from '../hooks/useApi';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -142,6 +143,9 @@ export default function Dashboard() {
             trend={{ value: 12, isPositive: true }}
           />
       </div>
+
+      {/* Insights por Categoria */}
+      <CategoryInsights />
 
       {/* Gráficos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

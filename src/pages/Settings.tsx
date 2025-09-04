@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings as SettingsIcon,
   User,
@@ -16,8 +16,11 @@ import {
   Check,
   X,
   AlertTriangle,
-  Info
+  Info,
+  Building,
+  DollarSign
 } from 'lucide-react';
+import { useSector, SECTORS } from '../hooks/useSector.tsx';
 
 interface SystemSettings {
   // Configurações gerais
@@ -121,6 +124,12 @@ export default function Settings() {
     supabase: ''
   });
 
+  const { selectedSector, setSector, clearSector } = useSector();
+
+  const handleSectorChange = (sectorId: string) => {
+    setSector(sectorId);
+  };
+
   useEffect(() => {
     // Carregar configurações salvas
     const savedSettings = localStorage.getItem('systemSettings');
@@ -157,7 +166,10 @@ export default function Settings() {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
+
+
   const tabs = [
+    { id: 'sector', label: 'Setor', icon: Building },
     { id: 'general', label: 'Geral', icon: SettingsIcon },
     { id: 'appointments', label: 'Agendamentos', icon: Clock },
     { id: 'notifications', label: 'Notificações', icon: Bell },
@@ -234,6 +246,89 @@ export default function Settings() {
         {/* Conteúdo das configurações */}
         <div className="lg:col-span-3">
           <div className="bg-white shadow rounded-lg p-6">
+            {/* Configurações de Setor */}
+            {activeTab === 'sector' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Setor do Negócio</h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    Selecione o setor do seu negócio para personalizar a interface e funcionalidades do sistema.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {SECTORS.map((sector) => (
+                      <div
+                        key={sector.id}
+                        className={`relative rounded-lg border-2 p-4 cursor-pointer transition-all ${
+                          selectedSector?.id === sector.id
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => handleSectorChange(sector.id)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="text-3xl">{sector.icon}</div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-medium text-gray-900">
+                              {sector.name}
+                            </h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {sector.description}
+                            </p>
+                            <div className="mt-3">
+                              <div className="flex flex-wrap gap-1">
+                                {sector.features.slice(0, 3).map((feature) => (
+                                  <span
+                                    key={feature}
+                                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                                  >
+                                    {feature}
+                                  </span>
+                                ))}
+                                {sector.features.length > 3 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    +{sector.features.length - 3} mais
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {selectedSector?.id === sector.id && (
+                            <div className="absolute top-2 right-2">
+                              <Check className="w-5 h-5 text-blue-600" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {selectedSector && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Info className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-sm font-medium text-blue-900">
+                          Setor Atual: {selectedSector.name}
+                        </h4>
+                      </div>
+                      <p className="text-sm text-blue-700 mt-1">
+                        O sistema está configurado para {selectedSector.name.toLowerCase()}. 
+                        A navegação e funcionalidades foram adaptadas para este setor.
+                      </p>
+                      <div className="mt-3">
+                        <button
+                          onClick={clearSector}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          Voltar à seleção de setor
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Configurações Gerais */}
             {activeTab === 'general' && (
               <div className="space-y-6">

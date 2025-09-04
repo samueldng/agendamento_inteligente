@@ -11,6 +11,7 @@ import {
   Filter,
   Eye
 } from 'lucide-react';
+import { useCategories } from '../hooks/useCategories';
 
 interface Service {
   id: string;
@@ -36,20 +37,12 @@ interface ServiceFormData {
 interface FormErrors {
   name?: string;
   description?: string;
+  category?: string;
   duration?: string;
   price?: string;
 }
 
-const CATEGORIES = [
-  'Consulta',
-  'Exame',
-  'Procedimento',
-  'Cirurgia',
-  'Terapia',
-  'Diagnóstico',
-  'Tratamento',
-  'Outros'
-];
+// Categorias agora são carregadas dinamicamente do Supabase
 
 const MOCK_SERVICES: Service[] = [
   {
@@ -99,6 +92,7 @@ const MOCK_SERVICES: Service[] = [
 ];
 
 export default function Services() {
+  const { data: categories, loading: categoriesLoading } = useCategories();
   const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -110,7 +104,7 @@ export default function Services() {
     description: '',
     duration: 30,
     price: 0,
-    category: 'Consulta',
+    category: '',
     active: true
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -134,6 +128,10 @@ export default function Services() {
 
     if (!formData.description.trim()) {
       newErrors.description = 'Descrição é obrigatória';
+    }
+
+    if (!formData.category.trim()) {
+      newErrors.category = 'Categoria é obrigatória';
     }
 
     if (formData.duration <= 0) {
@@ -292,11 +290,12 @@ export default function Services() {
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+            disabled={categoriesLoading}
           >
             <option value="all">Todas as categorias</option>
-            {CATEGORIES.map(category => (
-              <option key={category} value={category}>
-                {category}
+            {categories?.map(category => (
+              <option key={category.id} value={category.name}>
+                {category.name}
               </option>
             ))}
           </select>
@@ -480,14 +479,21 @@ export default function Services() {
                 <select
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  className={`w-full px-3 py-2 border rounded-md text-sm ${
+                    errors.category ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  disabled={categoriesLoading}
                 >
-                  {CATEGORIES.map(category => (
-                    <option key={category} value={category}>
-                      {category}
+                  <option value="">Selecione uma categoria</option>
+                  {categories?.map(category => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
+                {errors.category && (
+                  <p className="mt-1 text-sm text-red-600">{errors.category}</p>
+                )}
               </div>
 
               {/* Duração e Preço */}
